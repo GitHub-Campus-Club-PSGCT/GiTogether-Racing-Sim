@@ -1,0 +1,534 @@
+/* ==========================================================================
+   F1 RUSH RACING GAME STYLES
+   ========================================================================== */
+
+.f1-game {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 550px;
+  overflow: hidden;
+  background: #101923;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  user-select: none;
+}
+
+.f1-game canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ----------------------------------
+   Top Bar
+   ---------------------------------- */
+.f1-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(7, 12, 18, 0.85) 0%, rgba(7, 12, 18, 0) 100%);
+  z-index: 10;
+}
+
+.f1-brand-area {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+
+.f1-logo {
+  font-size: 26px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -1.5px;
+}
+
+.f1-logo span {
+  color: #e10600;
+}
+
+.f1-race-info {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  color: #e2e8f0;
+  background: rgba(225, 6, 0, 0.2);
+  border: 1px solid rgba(225, 6, 0, 0.5);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.f1-top-actions {
+  display: flex;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.f1-btn-subtle {
+  background: rgba(16, 25, 35, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+
+.f1-btn-subtle:hover {
+  background: rgba(225, 6, 0, 0.85);
+  border-color: #e10600;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ----------------------------------
+   Status Banners (Off-Track / Drift)
+   ---------------------------------- */
+.f1-status-banner {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2.5px;
+  padding: 5px 20px;
+  border-radius: 20px;
+  pointer-events: none;
+  z-index: 15;
+}
+
+.f1-status-banner.warn {
+  background: rgba(225, 6, 0, 0.9);
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(225, 6, 0, 0.55);
+  animation: pulse-banner 0.7s infinite alternate ease-in-out;
+}
+
+.f1-status-banner.drift {
+  background: rgba(168, 85, 247, 0.85);
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(168, 85, 247, 0.5);
+  animation: pulse-drift 1.1s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-banner {
+  0%   { transform: translateX(-50%) scale(0.97); opacity: 0.88; }
+  100% { transform: translateX(-50%) scale(1.03); opacity: 1; }
+}
+
+@keyframes pulse-drift {
+  0%   { transform: translateX(-50%) scale(0.98); opacity: 0.75; }
+  100% { transform: translateX(-50%) scale(1.02); opacity: 1; }
+}
+
+/* ----------------------------------
+   Countdown overlay
+   ---------------------------------- */
+.f1-countdown-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.f1-countdown-number {
+  font-size: clamp(100px, 20vw, 200px);
+  font-weight: 1000;
+  font-style: italic;
+  color: #e10600;
+  text-shadow:
+    0 0 60px rgba(225, 6, 0, 0.6),
+    0 4px 24px rgba(0, 0, 0, 0.8);
+  animation: count-pop 0.6s ease-out forwards;
+}
+
+.f1-countdown-number.go {
+  color: #22c55e;
+  text-shadow:
+    0 0 60px rgba(34, 197, 94, 0.5),
+    0 4px 24px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes count-pop {
+  0%   { transform: scale(1.4); opacity: 0; }
+  30%  { transform: scale(1.0); opacity: 1; }
+  80%  { transform: scale(1.0); opacity: 1; }
+  100% { transform: scale(0.7); opacity: 0; }
+}
+
+/* ----------------------------------
+   Speedometer & Gear
+   ---------------------------------- */
+.f1-speed {
+  position: absolute;
+  bottom: 28px;
+  left: 32px;
+  pointer-events: none;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+  z-index: 10;
+}
+
+.speed-number {
+  font-size: clamp(48px, 6.5vw, 80px);
+  font-weight: 900;
+  line-height: 0.9;
+  font-style: italic;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -2px;
+}
+
+.speed-unit {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.gear-number {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #e10600;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 3px 8px;
+  border-radius: 3px;
+  display: inline-block;
+  border-left: 3px solid #e10600;
+}
+
+/* ----------------------------------
+   Lap Times & Race Timer Card
+   ---------------------------------- */
+.f1-timer-card {
+  position: absolute;
+  bottom: 28px;
+  right: 32px;
+  background: rgba(10, 16, 24, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 12px 18px;
+  min-width: 175px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.timer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 5px;
+}
+
+.timer-row:last-child {
+  margin-bottom: 0;
+}
+
+.timer-label {
+  font-size: 10px;
+  color: #94a3b8;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+}
+
+.timer-val {
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #cbd5e1;
+}
+
+.timer-val.primary {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.timer-val.highlight {
+  color: #a855f7;
+  font-weight: 800;
+}
+
+.timer-val.dim {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* ----------------------------------
+   Circuit Radar (Minimap)
+   ---------------------------------- */
+.f1-minimap-container {
+  position: absolute;
+  top: 80px;
+  right: 32px;
+  background: rgba(10, 16, 24, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.f1-minimap-svg {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
+
+.minimap-title {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* ----------------------------------
+   Overlays (Start, Pause, Finished)
+   ---------------------------------- */
+.f1-modal-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: radial-gradient(circle at center, rgba(16, 25, 35, 0.85) 0%, rgba(5, 8, 12, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  z-index: 30;
+  animation: modal-fade-in 0.25s ease-out;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.f1-modal-card {
+  max-width: 540px;
+  padding: 36px 32px;
+  border-radius: 12px;
+  background: rgba(22, 33, 46, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+}
+
+.f1-eyebrow {
+  color: #e10600;
+  font-size: 11px;
+  letter-spacing: 4px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.f1-modal-card h1 {
+  font-size: clamp(52px, 8vw, 84px);
+  font-style: italic;
+  font-weight: 1000;
+  letter-spacing: -4px;
+  margin: 10px 0 14px;
+  line-height: 1;
+}
+
+.f1-modal-card h1 span {
+  color: #e10600;
+}
+
+.f1-modal-card h2 {
+  font-size: 38px;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin: 12px 0 8px;
+}
+
+.f1-modal-card p {
+  color: #94a3b8;
+  font-size: 15px;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.f1-btn-primary {
+  background: #e10600;
+  border: none;
+  color: #ffffff;
+  padding: 15px 40px;
+  font-weight: 900;
+  font-size: 14px;
+  letter-spacing: 2px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px rgba(225, 6, 0, 0.4);
+}
+
+.f1-btn-primary:hover {
+  background: #ffffff;
+  color: #e10600;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255, 255, 255, 0.4);
+}
+
+.f1-btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  padding: 14px 34px;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.f1-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.f1-modal-buttons {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.f1-instructions {
+  color: #64748b;
+  font-size: 11px;
+  line-height: 2.1;
+  letter-spacing: 1px;
+  margin-top: 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 20px;
+}
+
+.f1-instructions strong {
+  color: #cbd5e1;
+}
+
+/* ----------------------------------
+   Results Grid (Finish Screen)
+   ---------------------------------- */
+.f1-results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 26px;
+  text-align: left;
+}
+
+.result-card {
+  background: rgba(10, 16, 24, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.card-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.card-val {
+  display: block;
+  font-size: 20px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #f8fafc;
+}
+
+.card-val.highlight {
+  color: #a855f7;
+}
+
+/* ----------------------------------
+   Bottom Controls Hint
+   ---------------------------------- */
+.f1-controls-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 1.5px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ----------------------------------
+   Responsive Breakpoints
+   ---------------------------------- */
+@media (max-width: 768px) {
+  .f1-topbar {
+    padding: 14px 18px;
+  }
+
+  .f1-brand-area {
+    gap: 10px;
+  }
+
+  .f1-logo {
+    font-size: 22px;
+  }
+
+  .f1-race-info {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .f1-speed {
+    left: 18px;
+    bottom: 20px;
+  }
+
+  .f1-timer-card {
+    right: 18px;
+    bottom: 20px;
+    padding: 10px 14px;
+    min-width: 150px;
+  }
+
+  .f1-minimap-container {
+    top: 70px;
+    right: 18px;
+    padding: 6px;
+  }
+
+  .f1-minimap-svg {
+    width: 64px;
+    height: 64px;
+  }
+
+  .f1-results-grid {
+    grid-template-columns: 1fr;
+  }
+}
