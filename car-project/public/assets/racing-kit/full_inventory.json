@@ -1,0 +1,690 @@
+{
+  "Circuit & Road Pieces": [
+    {
+      "name": "roadBump.glb",
+      "size": "1.00m x 0.10m x 2.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerBridgeLarge.glb",
+      "size": "2.00m x 0.13m x 2.00m",
+      "materials": "wall, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerBridgeLarger.glb",
+      "size": "3.00m x 0.13m x 3.00m",
+      "materials": "grey, wall, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerBridgeSmall.glb",
+      "size": "1.00m x 0.13m x 1.00m",
+      "materials": "wall, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLarge.glb",
+      "size": "2.00m x 0.02m x 2.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargeBorder.glb",
+      "size": "2.21m x 0.02m x 2.21m",
+      "materials": "white, red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargeBorderInner.glb",
+      "size": "1.00m x 0.02m x 1.00m",
+      "materials": "red, white",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLarger.glb",
+      "size": "3.00m x 0.02m x 3.00m",
+      "materials": "_defaultMat, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargerBorder.glb",
+      "size": "3.21m x 0.02m x 3.21m",
+      "materials": "red, white",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargerBorderInner.glb",
+      "size": "2.00m x 0.02m x 2.00m",
+      "materials": "red, white",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargerSand.glb",
+      "size": "3.53m x 0.00m x 3.53m",
+      "materials": "sand",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargerSandInner.glb",
+      "size": "2.00m x 0.00m x 2.00m",
+      "materials": "sand",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargerWall.glb",
+      "size": "3.58m x 0.04m x 3.58m",
+      "materials": "white, red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargerWallInner.glb",
+      "size": "1.47m x 0.04m x 1.47m",
+      "materials": "red, white",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargeSand.glb",
+      "size": "2.53m x 0.00m x 2.53m",
+      "materials": "sand",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargeSandInner.glb",
+      "size": "1.00m x 0.00m x 1.00m",
+      "materials": "sand",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargeWall.glb",
+      "size": "2.58m x 0.04m x 2.58m",
+      "materials": "white, red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerLargeWallInner.glb",
+      "size": "0.47m x 0.04m x 0.47m",
+      "materials": "white, red, _defaultMat",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerSmall.glb",
+      "size": "1.00m x 0.02m x 1.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerSmallBorder.glb",
+      "size": "1.21m x 0.02m x 1.21m",
+      "materials": "red, white",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerSmallSand.glb",
+      "size": "1.53m x 0.00m x 1.53m",
+      "materials": "sand",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerSmallSquare.glb",
+      "size": "1.00m x 0.02m x 1.00m",
+      "materials": "grass, _defaultMat, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCornerSmallWall.glb",
+      "size": "1.58m x 0.04m x 1.58m",
+      "materials": "red, white",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCrossing.glb",
+      "size": "2.00m x 0.02m x 2.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCurved.glb",
+      "size": "1.50m x 0.02m x 2.00m",
+      "materials": "road, grey, grass",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadCurvedSplit.glb",
+      "size": "2.00m x 0.02m x 2.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadEnd.glb",
+      "size": "1.00m x 0.02m x 1.50m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadPitEntry.glb",
+      "size": "2.00m x 0.02m x 2.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadPitGarage.glb",
+      "size": "1.00m x 0.02m x 1.00m",
+      "materials": "grey, road, grass",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadPitStraight.glb",
+      "size": "1.00m x 0.02m x 1.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadPitStraightLong.glb",
+      "size": "1.00m x 0.02m x 2.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadRamp.glb",
+      "size": "1.00m x 0.27m x 1.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadRampLong.glb",
+      "size": "1.00m x 0.52m x 2.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadRampLongCurved.glb",
+      "size": "1.00m x 0.52m x 2.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadRampLongCurvedWall.glb",
+      "size": "1.00m x 0.52m x 2.00m",
+      "materials": "wall, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadRampLongWall.glb",
+      "size": "1.00m x 0.52m x 2.00m",
+      "materials": "wall, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadRampWall.glb",
+      "size": "1.00m x 0.27m x 1.00m",
+      "materials": "wall, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadSide.glb",
+      "size": "2.00m x 0.02m x 2.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadSplit.glb",
+      "size": "3.00m x 0.02m x 2.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadSplitLarge.glb",
+      "size": "2.00m x 0.02m x 2.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadSplitLarger.glb",
+      "size": "3.00m x 0.02m x 3.00m",
+      "materials": "_defaultMat, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadSplitRound.glb",
+      "size": "3.00m x 0.02m x 2.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadSplitRoundLarge.glb",
+      "size": "5.00m x 0.02m x 3.00m",
+      "materials": "_defaultMat, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadSplitSmall.glb",
+      "size": "1.00m x 0.02m x 1.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStart.glb",
+      "size": "1.26m x 0.67m x 2.00m",
+      "materials": "grey, grass, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStartPositions.glb",
+      "size": "1.00m x 0.02m x 2.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraight.glb",
+      "size": "1.00m x 0.02m x 1.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraightArrow.glb",
+      "size": "1.00m x 0.02m x 1.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraightBridge.glb",
+      "size": "1.00m x 0.52m x 1.00m",
+      "materials": "wall, grey, road, _defaultMat",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraightBridgeMid.glb",
+      "size": "1.00m x 0.13m x 1.00m",
+      "materials": "wall, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraightBridgeStart.glb",
+      "size": "1.00m x 0.52m x 1.00m",
+      "materials": "wall, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraightLong.glb",
+      "size": "1.00m x 0.02m x 2.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraightLongBump.glb",
+      "size": "1.00m x 0.52m x 4.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraightLongBumpRound.glb",
+      "size": "1.00m x 0.04m x 2.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraightLongMid.glb",
+      "size": "1.00m x 0.02m x 2.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "roadStraightSkew.glb",
+      "size": "2.00m x 0.02m x 2.00m",
+      "materials": "grass, grey, road",
+      "hasTexture": "PBR Colors"
+    }
+  ],
+  "Barriers & Fencing": [
+    {
+      "name": "barrierRed.glb",
+      "size": "0.25m x 0.13m x 0.12m",
+      "materials": "red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "barrierWall.glb",
+      "size": "1.00m x 0.13m x 0.12m",
+      "materials": "grey, red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "barrierWhite.glb",
+      "size": "0.25m x 0.13m x 0.12m",
+      "materials": "grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "fenceCurved.glb",
+      "size": "1.00m x 0.82m x 0.32m",
+      "materials": "grey, net",
+      "hasTexture": "net"
+    },
+    {
+      "name": "fenceStraight.glb",
+      "size": "1.00m x 0.50m x 0.03m",
+      "materials": "grey, net",
+      "hasTexture": "net"
+    }
+  ],
+  "Grandstands": [
+    {
+      "name": "grandStand.glb",
+      "size": "1.00m x 0.90m x 1.00m",
+      "materials": "grey, _defaultMat, red, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "grandStandAwning.glb",
+      "size": "1.00m x 1.39m x 1.00m",
+      "materials": "grey, red, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "grandStandCovered.glb",
+      "size": "1.00m x 1.19m x 1.02m",
+      "materials": "grey, _defaultMat, red, road, glass",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "grandStandCoveredRound.glb",
+      "size": "1.64m x 1.19m x 1.64m",
+      "materials": "road, red, glass, grey, _defaultMat",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "grandStandRound.glb",
+      "size": "1.64m x 0.90m x 1.64m",
+      "materials": "grey, red, road, _defaultMat",
+      "hasTexture": "PBR Colors"
+    }
+  ],
+  "Pit Buildings & Garages": [
+    {
+      "name": "pitsGarage.glb",
+      "size": "1.00m x 0.70m x 1.09m",
+      "materials": "grey, _defaultMat, tankco, red",
+      "hasTexture": "tankcoBanner"
+    },
+    {
+      "name": "pitsGarageClosed.glb",
+      "size": "1.00m x 0.70m x 1.09m",
+      "materials": "grey, _defaultMat, tankco, red, glass",
+      "hasTexture": "tankcoBanner"
+    },
+    {
+      "name": "pitsGarageCorner.glb",
+      "size": "1.05m x 0.70m x 1.00m",
+      "materials": "grey, _defaultMat, red, road, glass",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "pitsOffice.glb",
+      "size": "1.00m x 0.51m x 1.04m",
+      "materials": "grey, red, glass, _defaultMat",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "pitsOfficeCorner.glb",
+      "size": "1.04m x 0.51m x 1.04m",
+      "materials": "grey, glass, red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "pitsOfficeRoof.glb",
+      "size": "1.00m x 0.85m x 1.04m",
+      "materials": "grey, red, glass, _defaultMat",
+      "hasTexture": "PBR Colors"
+    }
+  ],
+  "Trackside Equipment & Signage": [
+    {
+      "name": "billboard.glb",
+      "size": "1.00m x 1.00m x 0.48m",
+      "materials": "bark, road, tankco, grey",
+      "hasTexture": "tankcoBanner"
+    },
+    {
+      "name": "billboardDouble_exclusive.glb",
+      "size": "1.00m x 1.00m x 0.36m",
+      "materials": "bark, road, tankco, grey",
+      "hasTexture": "tankcoBanner"
+    },
+    {
+      "name": "billboardLow.glb",
+      "size": "1.00m x 0.69m x 0.48m",
+      "materials": "bark, road, tankco, grey",
+      "hasTexture": "tankcoBanner"
+    },
+    {
+      "name": "billboardLower.glb",
+      "size": "0.50m x 0.28m x 0.07m",
+      "materials": "grey, road, bark, tankco, _defaultMat",
+      "hasTexture": "tankcoBanner"
+    },
+    {
+      "name": "camera_exclusive.glb",
+      "size": "0.11m x 0.41m x 0.26m",
+      "materials": "road, grey, _defaultMat",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "pylon.glb",
+      "size": "0.12m x 0.13m x 0.12m",
+      "materials": "pylon",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "raceCarGreen.glb",
+      "size": "0.74m x 0.47m x 1.49m",
+      "materials": "carTire, grass, glass, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "raceCarOrange.glb",
+      "size": "0.74m x 0.47m x 1.49m",
+      "materials": "carTire, pylon, glass, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "raceCarRed.glb",
+      "size": "0.74m x 0.47m x 1.49m",
+      "materials": "carTire, red, glass, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "raceCarWhite.glb",
+      "size": "0.74m x 0.47m x 1.49m",
+      "materials": "carTire, grey, glass",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "radarEquipment.glb",
+      "size": "0.59m x 0.54m x 0.41m",
+      "materials": "grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "rail.glb",
+      "size": "0.05m x 0.16m x 1.00m",
+      "materials": "grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "railDouble.glb",
+      "size": "0.05m x 0.28m x 1.00m",
+      "materials": "grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "ramp.glb",
+      "size": "0.55m x 0.33m x 0.73m",
+      "materials": "bark, grey",
+      "hasTexture": "PBR Colors"
+    }
+  ],
+  "Lighting & Gantries": [
+    {
+      "name": "lightColored.glb",
+      "size": "0.07m x 0.65m x 0.11m",
+      "materials": "_defaultMat, grey, road, pylon, red, grass",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "lightPostLarge.glb",
+      "size": "0.38m x 0.80m x 0.10m",
+      "materials": "_defaultMat, grey, pylon",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "lightPostModern.glb",
+      "size": "0.05m x 0.78m x 0.18m",
+      "materials": "_defaultMat, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "lightPost_exclusive.glb",
+      "size": "0.20m x 0.80m x 0.10m",
+      "materials": "_defaultMat, grey, pylon",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "lightRed.glb",
+      "size": "0.07m x 0.71m x 0.11m",
+      "materials": "_defaultMat, grey, road, pylon, red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "lightRedDouble.glb",
+      "size": "0.14m x 0.68m x 0.11m",
+      "materials": "_defaultMat, grey, road, pylon, red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "overhead.glb",
+      "size": "1.26m x 0.67m x 0.19m",
+      "materials": "grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "overheadLights.glb",
+      "size": "1.26m x 0.69m x 0.19m",
+      "materials": "grey, road, red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "overheadRound.glb",
+      "size": "1.87m x 0.93m x 0.33m",
+      "materials": "road, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "overheadRoundColored.glb",
+      "size": "1.87m x 0.93m x 0.33m",
+      "materials": "red, grey",
+      "hasTexture": "PBR Colors"
+    }
+  ],
+  "Environment & Scenery": [
+    {
+      "name": "grass.glb",
+      "size": "1.00m x 0.00m x 1.00m",
+      "materials": "grass",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "tent.glb",
+      "size": "1.00m x 0.70m x 1.00m",
+      "materials": "red, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "tentClosed.glb",
+      "size": "1.00m x 0.70m x 1.00m",
+      "materials": "grass, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "tentClosedLong.glb",
+      "size": "2.00m x 0.70m x 1.00m",
+      "materials": "grass, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "tentLong.glb",
+      "size": "2.00m x 0.70m x 1.00m",
+      "materials": "red, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "tentRoof.glb",
+      "size": "0.56m x 0.63m x 0.99m",
+      "materials": "grey, grass",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "tentRoofDouble.glb",
+      "size": "1.12m x 0.63m x 0.99m",
+      "materials": "grass, grey",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "treeLarge.glb",
+      "size": "0.36m x 1.51m x 0.41m",
+      "materials": "grass, bark",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "treeSmall.glb",
+      "size": "0.25m x 1.07m x 0.29m",
+      "materials": "grass, bark",
+      "hasTexture": "PBR Colors"
+    }
+  ],
+  "Flags & Banners": [
+    {
+      "name": "bannerTowerGreen.glb",
+      "size": "0.39m x 1.25m x 0.39m",
+      "materials": "_defaultMat, grey, grass",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "bannerTowerRed.glb",
+      "size": "0.39m x 1.25m x 0.39m",
+      "materials": "_defaultMat, grey, red",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "flagCheckers.glb",
+      "size": "0.20m x 1.25m x 0.04m",
+      "materials": "checkers, _defaultMat, grey, road",
+      "hasTexture": "checkers"
+    },
+    {
+      "name": "flagCheckersSmall.glb",
+      "size": "0.19m x 0.30m x 0.04m",
+      "materials": "checkers, _defaultMat, grey, road",
+      "hasTexture": "checkers"
+    },
+    {
+      "name": "flagGreen.glb",
+      "size": "0.20m x 1.25m x 0.04m",
+      "materials": "grass, _defaultMat, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "flagRed.glb",
+      "size": "0.20m x 1.25m x 0.04m",
+      "materials": "red, _defaultMat, grey, road",
+      "hasTexture": "PBR Colors"
+    },
+    {
+      "name": "flagTankco.glb",
+      "size": "0.20m x 1.25m x 0.04m",
+      "materials": "tankco, _defaultMat, grey, road",
+      "hasTexture": "tankcoBanner"
+    }
+  ]
+}

@@ -1,299 +1,188 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
 import { audioEngine } from "./audio";
+import {
+  START_CONFIG,
+  BARRIER_OFFSET,
+  CIRCUIT_CURVE,
+  CHECKPOINTS,
+  HALF_WIDTH,
+  projectToTrack,
+  createCircuitGeometries,
+  getCircuitSvgPath,
+} from "./circuitDefinition";
+import TracksideEnvironment from "./TracksideEnvironment";
+import AuthenticF1Car from "./AuthenticF1Car";
 import "./RacingGame.css";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// TRACK GEOMETRY CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
-const TRACK = {
-  INNER: 29.5,       // inner asphalt boundary
-  OUTER: 41.5,       // outer asphalt boundary
-  CENTRE: 35.5,      // track centerline radius
-  BARRIER_INNER: 27.5,
-  BARRIER_OUTER: 44.5,
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// F1 CAR 3D MODEL
-// ─────────────────────────────────────────────────────────────────────────────
-
-function F1Car({ wheelsRef, frontSteerRef, brakeLightRef }) {
-  return (
-    <group>
-      {/* Main chassis */}
-      <mesh position={[0, 0.65, 0]} castShadow receiveShadow>
-        <boxGeometry args={[1.15, 0.42, 3.2]} />
-        <meshStandardMaterial color="#e10600" metalness={0.65} roughness={0.25} />
-      </mesh>
-
-      {/* Front nose */}
-      <mesh position={[0, 0.58, -2.1]} castShadow receiveShadow>
-        <boxGeometry args={[0.46, 0.18, 1.5]} />
-        <meshStandardMaterial color="#e10600" metalness={0.6} roughness={0.3} />
-      </mesh>
-
-      {/* Cockpit */}
-      <mesh position={[0, 0.99, 0.25]} castShadow>
-        <boxGeometry args={[0.78, 0.3, 1.0]} />
-        <meshStandardMaterial color="#171923" roughness={0.2} />
-      </mesh>
-
-      {/* Driver helmet */}
-      <mesh position={[0, 1.18, 0.15]} castShadow>
-        <sphereGeometry args={[0.25, 20, 20]} />
-        <meshStandardMaterial color="#f5d442" metalness={0.4} roughness={0.3} />
-      </mesh>
-
-      {/* Halo */}
-      <mesh position={[0, 1.36, 0.12]} castShadow>
-        <torusGeometry args={[0.34, 0.045, 8, 24, Math.PI]} />
-        <meshStandardMaterial color="#cccccc" metalness={0.85} roughness={0.3} />
-      </mesh>
-
-      {/* Rear wing main plane */}
-      <mesh position={[0, 1.08, 1.85]} castShadow>
-        <boxGeometry args={[2.0, 0.1, 0.44]} />
-        <meshStandardMaterial color="#161616" metalness={0.7} roughness={0.4} />
-      </mesh>
-
-      {/* Rear wing lower flap */}
-      <mesh position={[0, 0.91, 1.78]} castShadow>
-        <boxGeometry args={[1.9, 0.08, 0.35]} />
-        <meshStandardMaterial color="#e10600" metalness={0.6} roughness={0.4} />
-      </mesh>
-
-      {/* Rear wing endplates */}
-      {[-1, 1].map((s) => (
-        <mesh key={`rwe${s}`} position={[s * 1.0, 0.98, 1.84]} castShadow>
-          <boxGeometry args={[0.055, 0.44, 0.52]} />
-          <meshStandardMaterial color="#e10600" metalness={0.6} />
-        </mesh>
-      ))}
-
-      {/* Front wing */}
-      <mesh position={[0, 0.36, -2.72]} castShadow>
-        <boxGeometry args={[2.3, 0.08, 0.5]} />
-        <meshStandardMaterial color="#171717" metalness={0.6} roughness={0.4} />
-      </mesh>
-
-      {/* Side pods */}
-      {[-1, 1].map((s) => (
-        <mesh key={`pod${s}`} position={[s * 0.72, 0.55, 0.3]} castShadow receiveShadow>
-          <boxGeometry args={[0.48, 0.3, 1.6]} />
-          <meshStandardMaterial color="#c50000" metalness={0.6} roughness={0.3} />
-        </mesh>
-      ))}
-
-      {/* Rear safety / brake LED */}
-      <mesh ref={brakeLightRef} position={[0, 0.68, 1.77]} castShadow>
-        <boxGeometry args={[0.24, 0.13, 0.07]} />
-        <meshStandardMaterial
-          color="#330000"
-          emissive="#220000"
-          emissiveIntensity={0.2}
-          roughness={0.1}
-        />
-      </mesh>
-
-      {/* Front Left Wheel with Steering Pivot */}
-      <group
-        ref={(el) => (frontSteerRef.current[0] = el)}
-        position={[-0.95, 0.38, -1.18]}
-      >
-        <group
-          ref={(el) => (wheelsRef.current[0] = el)}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <mesh castShadow>
-            <cylinderGeometry args={[0.42, 0.42, 0.33, 24]} />
-            <meshStandardMaterial color="#101010" roughness={0.9} />
-          </mesh>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.21, 0.21, 0.335, 20]} />
-            <meshStandardMaterial color="#888" metalness={0.9} roughness={0.2} />
-          </mesh>
-        </group>
-      </group>
-
-      {/* Front Right Wheel with Steering Pivot */}
-      <group
-        ref={(el) => (frontSteerRef.current[1] = el)}
-        position={[0.95, 0.38, -1.18]}
-      >
-        <group
-          ref={(el) => (wheelsRef.current[1] = el)}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <mesh castShadow>
-            <cylinderGeometry args={[0.42, 0.42, 0.33, 24]} />
-            <meshStandardMaterial color="#101010" roughness={0.9} />
-          </mesh>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.21, 0.21, 0.335, 20]} />
-            <meshStandardMaterial color="#888" metalness={0.9} roughness={0.2} />
-          </mesh>
-        </group>
-      </group>
-
-      {/* Rear Left Wheel */}
-      <group position={[-0.95, 0.38, 1.18]}>
-        <group
-          ref={(el) => (wheelsRef.current[2] = el)}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <mesh castShadow>
-            <cylinderGeometry args={[0.44, 0.44, 0.38, 24]} />
-            <meshStandardMaterial color="#101010" roughness={0.9} />
-          </mesh>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.22, 0.22, 0.385, 20]} />
-            <meshStandardMaterial color="#888" metalness={0.9} roughness={0.2} />
-          </mesh>
-        </group>
-      </group>
-
-      {/* Rear Right Wheel */}
-      <group position={[0.95, 0.38, 1.18]}>
-        <group
-          ref={(el) => (wheelsRef.current[3] = el)}
-          rotation={[0, 0, Math.PI / 2]}
-        >
-          <mesh castShadow>
-            <cylinderGeometry args={[0.44, 0.44, 0.38, 24]} />
-            <meshStandardMaterial color="#101010" roughness={0.9} />
-          </mesh>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.22, 0.22, 0.385, 20]} />
-            <meshStandardMaterial color="#888" metalness={0.9} roughness={0.2} />
-          </mesh>
-        </group>
-      </group>
-    </group>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RACE TRACK
 // ─────────────────────────────────────────────────────────────────────────────
 
+function createBoundaryGeometry(side, steps = 800) {
+  const positions = [];
+  const indices = [];
+
+  for (let i = 0; i <= steps; i++) {
+    const u = (i / steps) % 1;
+    const point = CIRCUIT_CURVE.getPointAt(u);
+    const tangent = CIRCUIT_CURVE.getTangentAt(u).normalize();
+    const normal = new THREE.Vector3(tangent.z, 0, -tangent.x).normalize();
+    const edgeX = point.x + normal.x * side * (HALF_WIDTH - 0.16);
+    const edgeZ = point.z + normal.z * side * (HALF_WIDTH - 0.16);
+    const halfStripeWidth = 0.055;
+
+    positions.push(
+      edgeX - normal.x * halfStripeWidth, 0.043, edgeZ - normal.z * halfStripeWidth,
+      edgeX + normal.x * halfStripeWidth, 0.043, edgeZ + normal.z * halfStripeWidth,
+    );
+  }
+
+  for (let i = 0; i < steps; i++) {
+    const row = i * 2;
+    const next = row + 2;
+    indices.push(row, row + 1, next, row + 1, next + 1, next);
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
 function RaceTrack() {
+  const {
+    roadGeom,
+    lKerbGeom,
+    rKerbGeom,
+    runoffGeom,
+    barrierGeom,
+    leftBoundaryGeom,
+    rightBoundaryGeom,
+  } = useMemo(() => ({
+    ...createCircuitGeometries(800),
+    leftBoundaryGeom: createBoundaryGeometry(-1),
+    rightBoundaryGeom: createBoundaryGeometry(1),
+  }), []);
+
   return (
     <group>
-      {/* Outer grass */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.12, 0]} receiveShadow>
-        <planeGeometry args={[500, 500]} />
-        <meshStandardMaterial color="#1f4a24" roughness={0.9} />
+      {/* Expansive terrain grass */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.05, 0]} receiveShadow>
+        <planeGeometry args={[1200, 1200]} />
+        <meshStandardMaterial color="#4d9147" roughness={0.96} />
       </mesh>
 
-      {/* Asphalt circuit ring */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <ringGeometry args={[29, 42, 180]} />
-        <meshStandardMaterial color="#2d3137" roughness={0.88} />
+      {/* Smooth continuous asphalt road ribbon */}
+      <mesh geometry={roadGeom} receiveShadow castShadow>
+        <meshStandardMaterial
+          color="#59636c"
+          emissive="#111922"
+          emissiveIntensity={0.22}
+          roughness={0.94}
+          metalness={0}
+        />
       </mesh>
 
-      {/* Inner grass island */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-        <circleGeometry args={[28.9, 128]} />
-        <meshStandardMaterial color="#2b5930" roughness={0.9} />
+      {/* White edge paint follows the same centerline as the road and collision system */}
+      <mesh geometry={leftBoundaryGeom} receiveShadow>
+        <meshStandardMaterial color="#f4f4ec" roughness={0.9} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh geometry={rightBoundaryGeom} receiveShadow>
+        <meshStandardMaterial color="#f4f4ec" roughness={0.9} side={THREE.DoubleSide} />
       </mesh>
 
-      {/* White track boundary rings */}
-      {[29.4, 41.6].map((r) => (
-        <mesh key={r} rotation={[Math.PI / 2, 0, 0]} position={[0, 0.03, 0]}>
-          <torusGeometry args={[r, 0.14, 6, 180]} />
-          <meshStandardMaterial color="#ebebeb" roughness={0.4} />
-        </mesh>
-      ))}
+      {/* Left 3D kerb (alternating red / white) */}
+      <mesh geometry={lKerbGeom} receiveShadow castShadow>
+        <meshStandardMaterial vertexColors roughness={0.5} />
+      </mesh>
 
-      {/* Inner kerbs (alternating red / white) */}
-      {Array.from({ length: 80 }, (_, i) => {
-        const angle = (i / 80) * Math.PI * 2;
-        return (
-          <mesh
-            key={`ik${i}`}
-            position={[Math.sin(angle) * 29.1, 0.015, Math.cos(angle) * 29.1]}
-            rotation={[-Math.PI / 2, 0, -angle]}
-            receiveShadow
-          >
-            <planeGeometry args={[1.2, 0.5]} />
-            <meshStandardMaterial color={i % 2 === 0 ? "#e10600" : "#f2f2f2"} roughness={0.5} />
-          </mesh>
-        );
-      })}
+      {/* Right 3D kerb (alternating red / white) */}
+      <mesh geometry={rKerbGeom} receiveShadow castShadow>
+        <meshStandardMaterial vertexColors roughness={0.5} />
+      </mesh>
 
-      {/* Outer kerbs (alternating red / white) */}
-      {Array.from({ length: 108 }, (_, i) => {
-        const angle = (i / 108) * Math.PI * 2;
-        return (
-          <mesh
-            key={`ok${i}`}
-            position={[Math.sin(angle) * 41.9, 0.015, Math.cos(angle) * 41.9]}
-            rotation={[-Math.PI / 2, 0, -angle]}
-            receiveShadow
-          >
-            <planeGeometry args={[1.3, 0.5]} />
-            <meshStandardMaterial color={i % 2 === 0 ? "#e10600" : "#f2f2f2"} roughness={0.5} />
-          </mesh>
-        );
-      })}
+      {/* Runoff apron (gravel & asphalt transitions) */}
+      <mesh geometry={runoffGeom} receiveShadow>
+        <meshStandardMaterial color="#858b80" roughness={0.96} />
+      </mesh>
 
-      {/* Checkered start / finish line at z = 35.5 */}
-      {Array.from({ length: 15 }, (_, i) => {
+      {/* Concrete & Tyre perimeter barrier walls */}
+      <mesh geometry={barrierGeom} castShadow receiveShadow>
+        <meshStandardMaterial vertexColors roughness={0.4} />
+      </mesh>
+
+      {/* Checkered Start / Finish Line at (0, 0, 100) across 14m track */}
+      {Array.from({ length: 16 }, (_, i) => {
         const isEven = i % 2 === 0;
-        const xPos = -6.3 + i * 0.9;
+        const zPos = 100 - 6.6 + i * 0.88;
         return (
-          <group key={`cf${i}`} position={[xPos, 0.018, TRACK.CENTRE]}>
-            <mesh position={[0, 0, -0.45]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[0.84, 0.86]} />
-              <meshStandardMaterial color={isEven ? "#ffffff" : "#111111"} roughness={0.4} />
+          <group key={`cf${i}`} position={[0, 0.025, zPos]}>
+            <mesh position={[-0.45, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[0.88, 0.88]} />
+              <meshStandardMaterial color={isEven ? "#ffffff" : "#111111"} roughness={0.35} />
             </mesh>
-            <mesh position={[0, 0, 0.45]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[0.84, 0.86]} />
-              <meshStandardMaterial color={isEven ? "#111111" : "#ffffff"} roughness={0.4} />
+            <mesh position={[0.45, 0, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[0.88, 0.88]} />
+              <meshStandardMaterial color={isEven ? "#111111" : "#ffffff"} roughness={0.35} />
             </mesh>
           </group>
         );
       })}
-
-      {/* Outer safety barrier blocks */}
-      {Array.from({ length: 54 }, (_, i) => {
-        const angle = (i / 54) * Math.PI * 2;
-        const r = 45;
-        return (
-          <mesh
-            key={`ob${i}`}
-            position={[Math.sin(angle) * r, 0.9, Math.cos(angle) * r]}
-            rotation={[0, -angle, 0]}
-            castShadow
-            receiveShadow
-          >
-            <boxGeometry args={[3.0, 1.6, 0.65]} />
-            <meshStandardMaterial color={i % 2 === 0 ? "#e10600" : "#f0f0f0"} roughness={0.35} />
-          </mesh>
-        );
-      })}
-
-      {/* Inner safety barrier blocks */}
-      {Array.from({ length: 40 }, (_, i) => {
-        const angle = (i / 40) * Math.PI * 2;
-        const r = 26.8;
-        return (
-          <mesh
-            key={`ib${i}`}
-            position={[Math.sin(angle) * r, 0.9, Math.cos(angle) * r]}
-            rotation={[0, -angle, 0]}
-            castShadow
-            receiveShadow
-          >
-            <boxGeometry args={[3.0, 1.6, 0.65]} />
-            <meshStandardMaterial color={i % 2 === 0 ? "#e10600" : "#f0f0f0"} roughness={0.35} />
-          </mesh>
-        );
-      })}
     </group>
+  );
+}
+
+function MorningSky() {
+  const skyRef = useRef();
+
+  useFrame(({ camera }) => {
+    if (skyRef.current) {
+      skyRef.current.position.copy(camera.position);
+    }
+  });
+
+  return (
+    <mesh ref={skyRef} renderOrder={-1000} frustumCulled={false}>
+      <sphereGeometry args={[1200, 32, 20]} />
+      <shaderMaterial
+        side={THREE.BackSide}
+        depthWrite={false}
+        toneMapped={false}
+        vertexShader={`
+          varying vec3 vDirection;
+          void main() {
+            vDirection = normalize(mat3(modelMatrix) * position);
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `}
+        fragmentShader={`
+          varying vec3 vDirection;
+          void main() {
+            float height = clamp(normalize(vDirection).y * 0.5 + 0.5, 0.0, 1.0);
+            float horizon = smoothstep(0.32, 0.56, height);
+            float zenith = smoothstep(0.58, 0.98, height);
+            vec3 warmHorizon = vec3(0.96, 0.84, 0.67);
+            vec3 morningBlue = vec3(0.37, 0.70, 0.94);
+            vec3 deepBlue = vec3(0.10, 0.39, 0.73);
+            vec3 color = mix(warmHorizon, morningBlue, horizon);
+            color = mix(color, deepBlue, zenith * 0.78);
+            float sunAlignment = dot(
+              normalize(vDirection),
+              normalize(vec3(0.78, 0.38, 0.50))
+            );
+            float sunHalo = pow(max(sunAlignment, 0.0), 72.0) * 0.22;
+            float sunDisk = smoothstep(0.99925, 0.9997, sunAlignment);
+            color = mix(color, vec3(1.0, 0.96, 0.82), clamp(sunHalo + sunDisk, 0.0, 1.0));
+            gl_FragColor = vec4(color, 1.0);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+          }
+        `}
+      />
+    </mesh>
   );
 }
 
@@ -301,18 +190,30 @@ function RaceTrack() {
 // GAME SCENE: ARCADE DRIVING SIMULATION + CAMERA + SOUND
 // ─────────────────────────────────────────────────────────────────────────────
 
-function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
+function GameScene({
+  onTelemetry,
+  gameState,
+  onFinishRace,
+  resetSignal,
+  restartSignal,
+}) {
   const car = useRef();
+  const sunRef = useRef();
   const cameraTarget = useRef(new THREE.Vector3());
+  const authenticCarRef = useRef();
   const wheelsRef = useRef([]);
   const frontSteerRef = useRef([]);
   const brakeLightRef = useRef();
 
+  const handleCarRef = useCallback((node) => {
+    authenticCarRef.current = node;
+  }, []);
+
   const physics = useRef({
     speed: 0,
-    yaw: -Math.PI / 2, // Facing counter-clockwise (+X direction at (0, 35.5))
-    x: 0,
-    z: TRACK.CENTRE,
+    yaw: START_CONFIG.yaw,
+    x: START_CONFIG.x,
+    z: START_CONFIG.z,
 
     steering: 0,
     lateralVelocity: 0,
@@ -323,7 +224,8 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
     currentLapTime: 0,
     bestLapTime: null,
     lastLapTime: null,
-    lastAngle: 0,
+    lastU: 0,
+    checkpointsPassed: new Set([0]),
     gear: 1,
     topSpeed: 0,
   });
@@ -358,14 +260,36 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
   useEffect(() => {
     if (!resetSignal) return;
     const p = physics.current;
-    const currentAngle = Math.atan2(p.x, p.z);
-    p.x = Math.sin(currentAngle) * TRACK.CENTRE;
-    p.z = Math.cos(currentAngle) * TRACK.CENTRE;
-    p.yaw = currentAngle - Math.PI / 2; // Facing tangent in racing direction
+    const proj = projectToTrack(p.x, p.z);
+    p.x = proj.centerPoint.x;
+    p.z = proj.centerPoint.z;
+    p.yaw = Math.atan2(-proj.tangent.x, -proj.tangent.z);
     p.speed = 0;
     p.lateralVelocity = 0;
     p.steering = 0;
   }, [resetSignal]);
+
+  // Handle Full Race Restart signal (from Restart Race or Race Again buttons)
+  useEffect(() => {
+    if (!restartSignal) return;
+    const p = physics.current;
+    p.speed = 0;
+    p.yaw = START_CONFIG.yaw;
+    p.x = START_CONFIG.x;
+    p.z = START_CONFIG.z;
+    p.steering = 0;
+    p.lateralVelocity = 0;
+    p.wheelRoll = 0;
+    p.lap = 1;
+    p.time = 0;
+    p.currentLapTime = 0;
+    p.bestLapTime = null;
+    p.lastLapTime = null;
+    p.lastU = 0;
+    p.checkpointsPassed = new Set([0]);
+    p.gear = 1;
+    p.topSpeed = 0;
+  }, [restartSignal]);
 
   useFrame((state, delta) => {
     if (!car.current) return;
@@ -373,16 +297,29 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
     const dt = Math.min(delta, 0.04);
     const p = physics.current;
     const isRacing = gameState === "racing";
+    const wheelMeshes = authenticCarRef.current?.wheelMeshes ?? [];
+    if (wheelMeshes.length && wheelMeshes !== wheelsRef.current) {
+      wheelsRef.current = wheelMeshes;
+      const namedFrontWheels = wheelMeshes.filter((wheel) =>
+        wheel.name.toLowerCase().includes("front"),
+      );
+      frontSteerRef.current = namedFrontWheels.length
+        ? namedFrontWheels
+        : wheelMeshes.filter((wheel) => wheel.position.z > 0).slice(0, 2);
+    }
 
+    let throttle = false;
     let brake = false;
     let onTrack = true;
+    let forwardX = -Math.sin(p.yaw);
+    let forwardZ = -Math.cos(p.yaw);
 
     if (isRacing) {
       p.time += dt;
       p.currentLapTime += dt;
 
       // Inputs
-      const throttle = !!(keys.current["w"] || keys.current["arrowup"]);
+      throttle = !!(keys.current["w"] || keys.current["arrowup"]);
       brake = !!(keys.current["s"] || keys.current["arrowdown"] || keys.current[" "]);
       const left = !!(keys.current["a"] || keys.current["arrowleft"]);
       const right = !!(keys.current["d"] || keys.current["arrowright"]);
@@ -413,22 +350,25 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
       }
 
       // Check track surface
-      const radius = Math.hypot(p.x, p.z);
-      onTrack = radius >= TRACK.INNER && radius <= TRACK.OUTER;
+      const proj = projectToTrack(p.x, p.z);
+      onTrack = proj.onTrack;
 
       // Steering response: 0 when stopped, scales up smoothly by ~15 m/s (~54 km/h)
       const speedFactor = THREE.MathUtils.clamp(p.speed / 15, 0, 1);
-      const grip = onTrack ? 1.0 : 0.6;
+      const speedRatio = p.speed / maxSpeed;
+      // High-speed challenge: smooth 18% reduction at top speed so corners require braking or drifting
+      const highSpeedFactor = 1.0 - speedRatio * 0.18;
+      const grip = onTrack ? 1.0 : (proj.onKerb ? 0.85 : 0.6);
 
       // Turn rate: responsive, predictable arcade steering
-      const turnRate = p.steering * speedFactor * 1.55 * grip;
+      const turnRate = p.steering * speedFactor * 1.55 * highSpeedFactor * grip;
       p.yaw += turnRate * dt;
 
       // Forward direction: In Three.js, car nose points in local -Z
       // When rotated by yaw around Y:
       // forwardX = -sin(yaw), forwardZ = -cos(yaw)
-      const forwardX = -Math.sin(p.yaw);
-      const forwardZ = -Math.cos(p.yaw);
+      forwardX = -Math.sin(p.yaw);
+      forwardZ = -Math.cos(p.yaw);
 
       // Right vector (perpendicular to forward)
       const rightX = Math.cos(p.yaw);
@@ -447,28 +387,21 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
       p.x += (forwardX * p.speed + rightX * p.lateralVelocity) * dt;
       p.z += (forwardZ * p.speed + rightZ * p.lateralVelocity) * dt;
 
-      // Soft barrier collision & off-track penalties
-      const newRadius = Math.hypot(p.x, p.z);
+      // Track surface and barrier collision
+      const newProj = projectToTrack(p.x, p.z);
 
-      if (!onTrack) {
-        p.speed = Math.max(0, p.speed - 22 * dt);
-        p.lateralVelocity *= 0.96;
+      if (!newProj.onTrack) {
+        const penalty = newProj.onKerb ? 10 : 24;
+        p.speed = Math.max(0, p.speed - penalty * dt);
+        p.lateralVelocity *= 0.95;
       }
 
-      // Outer barrier at radius 44.5: bounce gently, bleed speed, prevent escaping
-      if (newRadius > TRACK.BARRIER_OUTER) {
-        p.x = (p.x / newRadius) * TRACK.BARRIER_OUTER;
-        p.z = (p.z / newRadius) * TRACK.BARRIER_OUTER;
-        p.speed = Math.max(0, p.speed - 30 * dt);
-        p.lateralVelocity = 0;
-        audioEngine.playImpact();
-      }
-
-      // Inner barrier at radius 27.5: prevent escaping inward
-      if (newRadius < TRACK.BARRIER_INNER) {
-        p.x = (p.x / newRadius) * TRACK.BARRIER_INNER;
-        p.z = (p.z / newRadius) * TRACK.BARRIER_INNER;
-        p.speed = Math.max(0, p.speed - 30 * dt);
+      // Soft barrier collision: bounce gently, bleed speed, prevent escaping
+      if (newProj.absDistance >= BARRIER_OFFSET) {
+        const clampedDist = Math.sign(newProj.distance) * (BARRIER_OFFSET - 0.15);
+        p.x = newProj.centerPoint.x + newProj.normal.x * clampedDist;
+        p.z = newProj.centerPoint.z + newProj.normal.z * clampedDist;
+        p.speed = Math.max(0, p.speed - 32 * dt);
         p.lateralVelocity = 0;
         audioEngine.playImpact();
       }
@@ -476,15 +409,17 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
       // Gear calculation
       p.gear = THREE.MathUtils.clamp(Math.floor(p.speed / 10) + 1, 1, 8);
 
-      // Lap detection via polar angle:
-      // At (0, 35.5), angle is 0. Driving counter-clockwise, angle increases from 0 to 2*PI.
-      // Crossing finish line: angle transitions from > 5.5 to < 0.8 rad.
-      let angle = Math.atan2(p.x, p.z);
-      if (angle < 0) {
-        angle += Math.PI * 2;
+      // Checkpoint and lap detection:
+      for (const cp of CHECKPOINTS) {
+        const diff = Math.abs(newProj.u - cp.u);
+        if (diff < 0.06 || diff > 0.94) {
+          p.checkpointsPassed.add(cp.id);
+        }
       }
 
-      if (p.lastAngle > 5.5 && angle < 0.8 && p.speed > 5 && p.currentLapTime > 4.0) {
+      // Crossing finish line from final sector into main straight
+      const crossedLine = p.lastU > 0.85 && newProj.u < 0.15;
+      if (crossedLine && p.checkpointsPassed.size >= 6 && p.currentLapTime > 8.0 && p.speed > 5) {
         if (p.lap >= 5) {
           onFinishRace({
             totalTime: p.time,
@@ -498,39 +433,51 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
           }
           p.currentLapTime = 0;
           p.lap += 1;
+          p.checkpointsPassed.clear();
+          p.checkpointsPassed.add(0);
         }
       }
 
-      p.lastAngle = angle;
+      p.lastU = newProj.u;
     }
 
-    // Apply car position and yaw
-    car.current.position.set(p.x, 0, p.z);
+    // Apply car position, pitch, yaw and roll
+    const isBrakingActive = brake && isRacing;
+    const currentSpeedFactor = THREE.MathUtils.clamp(p.speed / 15, 0, 1);
+    const rollTarget = -p.steering * currentSpeedFactor * 0.04;
+    const pitchTarget = isBrakingActive ? -0.02 : (throttle && isRacing ? 0.012 : 0);
+
+    p.bodyRoll = THREE.MathUtils.damp(p.bodyRoll || 0, rollTarget, 6, dt);
+    p.bodyPitch = THREE.MathUtils.damp(p.bodyPitch || 0, pitchTarget, 8, dt);
+
+    // Subtle suspension vibration when off-track or over kerbs
+    const suspY = (!onTrack && p.speed > 8)
+      ? Math.sin(p.time * 36) * 0.016 * (p.speed / 78)
+      : 0;
+
+    car.current.position.set(p.x, suspY, p.z);
+    car.current.rotation.order = "YXZ";
+    car.current.rotation.x = p.bodyPitch;
     car.current.rotation.y = p.yaw;
+    car.current.rotation.z = p.bodyRoll;
 
     // Visual Wheel Spin (based on speed)
     const rollDelta = (p.speed * dt) / 0.42;
     p.wheelRoll -= rollDelta;
 
-    for (let i = 0; i < 4; i++) {
-      if (wheelsRef.current[i]) {
-        wheelsRef.current[i].rotation.x = p.wheelRoll;
-      }
+    for (const wheel of wheelsRef.current) {
+      wheel.rotation.x = p.wheelRoll;
     }
 
     // Front wheel visual steering pivot
-    for (let i = 0; i < 2; i++) {
-      if (frontSteerRef.current[i]) {
-        frontSteerRef.current[i].rotation.y = p.steering * 0.38;
-      }
+    for (const wheel of frontSteerRef.current) {
+      wheel.rotation.y = p.steering * 0.38;
     }
 
     // Rear brake LED light
     if (brakeLightRef.current) {
-      const isBrakingActive = brake && isRacing;
-      brakeLightRef.current.material.emissiveIntensity = isBrakingActive ? 2.8 : 0.2;
-      brakeLightRef.current.material.color.set(isBrakingActive ? "#ff1a1a" : "#330000");
-      brakeLightRef.current.material.emissive.set(isBrakingActive ? "#ff0000" : "#220000");
+      brakeLightRef.current.emissiveIntensity = isBrakingActive ? 3.5 : 0.25;
+      brakeLightRef.current.emissive.set(isBrakingActive ? "#ff0000" : "#220000");
     }
 
     // Chase camera
@@ -546,6 +493,13 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
     state.camera.position.lerp(desiredCamera, 1 - Math.pow(0.001, dt));
     cameraTarget.current.set(p.x, 1, p.z);
     state.camera.lookAt(cameraTarget.current);
+
+    // Directional sunlight follows car to maintain crisp 2K shadows anywhere on the 1km circuit
+    if (sunRef.current) {
+      sunRef.current.position.set(p.x + 35, 50, p.z + 25);
+      sunRef.current.target.position.set(p.x, 0, p.z);
+      sunRef.current.target.updateMatrixWorld();
+    }
 
     // Audio update
     audioEngine.update({
@@ -572,6 +526,8 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
         lastLapTime: p.lastLapTime,
         posX: p.x,
         posZ: p.z,
+        forwardX,
+        forwardZ,
         offTrack: !onTrack,
         isDrifting: Math.abs(p.lateralVelocity) > 3.0,
       });
@@ -580,36 +536,38 @@ function GameScene({ onTelemetry, gameState, onFinishRace, resetSignal }) {
 
   return (
     <>
-      <ambientLight intensity={0.65} />
+      <MorningSky />
+      <fog attach="fog" args={["#b9d8eb", 180, 600]} />
+      <ambientLight intensity={0.72} />
+      <hemisphereLight args={["#e4f5ff", "#58754a", 1.05]} />
 
       <directionalLight
-        position={[35, 45, 25]}
-        intensity={1.8}
+        ref={sunRef}
+        position={[35, 50, 25]}
+        color="#fff1d2"
+        intensity={2.2}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
         shadow-camera-near={1}
-        shadow-camera-far={140}
-        shadow-camera-left={-55}
-        shadow-camera-right={55}
-        shadow-camera-top={55}
-        shadow-camera-bottom={-55}
+        shadow-camera-far={120}
+        shadow-camera-left={-45}
+        shadow-camera-right={45}
+        shadow-camera-top={45}
+        shadow-camera-bottom={-45}
         shadow-bias={-0.0003}
       />
 
-      <directionalLight position={[-25, 20, -25]} intensity={0.4} />
+      <directionalLight position={[-25, 20, -25]} color="#d5ebff" intensity={0.65} />
 
       <RaceTrack />
 
+      <TracksideEnvironment />
+
       <group ref={car}>
-        <F1Car
-          wheelsRef={wheelsRef}
-          frontSteerRef={frontSteerRef}
-          brakeLightRef={brakeLightRef}
-        />
+        <AuthenticF1Car ref={handleCarRef} brakeLightRef={brakeLightRef} />
       </group>
 
-      <Stars radius={180} depth={40} count={700} factor={3} fade />
     </>
   );
 }
@@ -654,7 +612,10 @@ export default function RacingGame() {
   const [gameState, setGameState] = useState("start"); // "start" | "countdown" | "racing" | "paused" | "finished"
   const [soundMuted, setSoundMuted] = useState(false);
   const [resetCounter, setResetCounter] = useState(0);
+  const [restartCounter, setRestartCounter] = useState(0);
   const [results, setResults] = useState(null);
+
+  const circuitMap = useMemo(() => getCircuitSvgPath(120, 100), []);
 
   const [telemetry, setTelemetry] = useState({
     speed: 0,
@@ -665,8 +626,10 @@ export default function RacingGame() {
     currentLapTime: 0,
     bestLapTime: null,
     lastLapTime: null,
-    posX: 0,
-    posZ: TRACK.CENTRE,
+    posX: START_CONFIG.x,
+    posZ: START_CONFIG.z,
+    forwardX: START_CONFIG.forwardX,
+    forwardZ: START_CONFIG.forwardZ,
     offTrack: false,
     isDrifting: false,
   });
@@ -722,12 +685,14 @@ export default function RacingGame() {
       currentLapTime: 0,
       bestLapTime: null,
       lastLapTime: null,
-      posX: 0,
-      posZ: TRACK.CENTRE,
+      posX: START_CONFIG.x,
+      posZ: START_CONFIG.z,
+      forwardX: START_CONFIG.forwardX,
+      forwardZ: START_CONFIG.forwardZ,
       offTrack: false,
       isDrifting: false,
     });
-    setResetCounter((c) => c + 1);
+    setRestartCounter((c) => c + 1);
     setGameState("countdown");
   };
 
@@ -765,16 +730,21 @@ export default function RacingGame() {
     <div className="f1-game">
       <Canvas
         shadows
-        camera={{ position: [0, 7, 48], fov: 65 }}
-        gl={{ antialias: true }}
+        camera={{ position: [0, 7, 48], fov: 65, far: 2000 }}
+        gl={{
+          antialias: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.1,
+        }}
       >
-        <color attach="background" args={["#101923"]} />
+        <color attach="background" args={["#a9d8f4"]} />
 
         <GameScene
           onTelemetry={setTelemetry}
           gameState={gameState}
           onFinishRace={handleFinishRace}
           resetSignal={resetCounter}
+          restartSignal={restartCounter}
         />
       </Canvas>
 
@@ -866,22 +836,54 @@ export default function RacingGame() {
       {/* Minimap Radar */}
       {isRacingLive && (
         <div className="f1-minimap-container">
-          <svg viewBox="0 0 100 100" width="82" height="82" className="f1-minimap-svg">
-            {/* Outer Track Ring */}
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#252c38" strokeWidth="8" />
-            {/* Guide line */}
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#3b4657" strokeWidth="1" strokeDasharray="2.5 3" />
-            {/* Start / Finish line marker at bottom (z = 35.5) */}
-            <line x1="50" y1="76" x2="50" y2="86" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" />
-            {/* Player Car Marker */}
-            <circle
-              cx={50 + (telemetry.posX / 46) * 38}
-              cy={50 + (telemetry.posZ / 46) * 38}
-              r="4"
-              fill="#e10600"
-              stroke="#ffffff"
-              strokeWidth="1.5"
+          <svg viewBox="0 0 100 100" width="88" height="88" className="f1-minimap-svg">
+            {/* Outer Track Ribbon Background */}
+            <path
+              d={circuitMap.d}
+              fill="none"
+              stroke="#252c38"
+              strokeWidth="9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
+            {/* Center Guide Line */}
+            <path
+              d={circuitMap.d}
+              fill="none"
+              stroke="#e10600"
+              strokeWidth="1.2"
+              opacity="0.65"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Start / Finish line dot */}
+            {(() => {
+              const startCoord = circuitMap.transformCoord(START_CONFIG.x, START_CONFIG.z);
+              return (
+                <circle
+                  cx={startCoord.svgX}
+                  cy={startCoord.svgZ}
+                  r="2.8"
+                  fill="#ffffff"
+                />
+              );
+            })()}
+            {/* Player Car Marker with Directional Heading Arrow */}
+            {(() => {
+              const carCoord = circuitMap.transformCoord(
+                telemetry.posX ?? START_CONFIG.x,
+                telemetry.posZ ?? START_CONFIG.z
+              );
+              const headingDeg =
+                (Math.atan2(telemetry.forwardZ || 0, telemetry.forwardX || 1) * 180) /
+                Math.PI;
+              return (
+                <g transform={`translate(${carCoord.svgX}, ${carCoord.svgZ}) rotate(${headingDeg})`}>
+                  <circle r="4.2" fill="#e10600" stroke="#ffffff" strokeWidth="1.2" />
+                  <polygon points="5.5,0 1,-2.2 2,0 1,2.2" fill="#ffffff" />
+                </g>
+              );
+            })()}
           </svg>
           <div className="minimap-title">CIRCUIT RADAR</div>
         </div>
