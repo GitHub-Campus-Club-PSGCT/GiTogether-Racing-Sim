@@ -1,0 +1,1614 @@
+/* ==========================================================================
+   HUD & menus
+   ========================================================================== */
+:root {
+  --ink: #07090d;
+  --panel: rgba(9, 12, 17, 0.78);
+  --panel-solid: #0c1016;
+  --line: rgba(255, 255, 255, 0.09);
+  /* Neutral ramp (graphite): three text roles. */
+  --text: #ededed;
+  --text-2: #a1a1a6;
+  --muted: #85858b;
+  --hairline: rgba(237, 237, 237, 0.08);
+  --red: #e10600;
+  --purple: #a970ff;
+  --green: #3fb950; /* GitHub green: event credit only */
+  --positive: #4cc38a;
+  --negative: #e5484d;
+  --yellow: #ffd23f;
+  --blue: #3d8bff;
+  --font: "Titillium Web", system-ui, sans-serif;
+  /* Motion (strong custom curves; never ease-in on UI) */
+  /* One easing curve for everything (the lens curve the owner picked). */
+  --ease-lens: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: var(--ease-lens);
+  --ease-in-out: var(--ease-lens);
+  /* Glass materials: heavier/darker for HUD chrome, lighter for menu cards */
+  --glass-hud: linear-gradient(180deg, rgba(18, 22, 30, 0.62), rgba(10, 13, 18, 0.5));
+  --glass-hud-blur: blur(16px) saturate(150%);
+  --glass-card: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03)), rgba(10, 13, 18, 0.38);
+  --glass-card-blur: blur(28px) saturate(170%);
+  --glass-edge: rgba(255, 255, 255, 0.1);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.f1-game {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--ink);
+  font-family: var(--font);
+  color: var(--text);
+  user-select: none;
+}
+.f1-game canvas {
+  display: block;
+}
+
+.hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.hud button,
+.lens-card button {
+  font-family: var(--font);
+  cursor: pointer;
+}
+
+/* Signature: every time, delta and speed is set like a pit-wall timing screen. */
+.hud-current-time,
+.hud-lapcount b,
+.hud-v,
+.hud-v-delta,
+.hud-history-row span:nth-child(n + 2),
+.hud-sector-block b,
+.hud-sectors-foot b,
+.hud-delta-pill,
+.hud-dial-body b,
+.hud-dial-body small.rpm,
+.hud-gear,
+.hud-banner-time,
+.menu-summary b,
+.menu-results b,
+.menu-lap b,
+.menu-lap em,
+.menu-sectors b,
+.loader-text {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* Keyboard focus stays visible. */
+.lens-card button:focus-visible,
+.menu-toggle:focus-within i {
+  outline: 2px solid rgba(237, 237, 237, 0.6);
+  outline-offset: 2px;
+}
+
+/* Best times are always purple. */
+.purple {
+  color: var(--purple) !important;
+}
+
+/* --- Shared HUD scale + entrance ------------------------------------------ */
+.hud {
+  zoom: var(--hud-scale, 1);
+}
+/* Panels slide in from the edge they live on, once per session. */
+.hud-enter-left {
+  animation: hud-enter-left 560ms var(--ease-lens) both;
+}
+.hud-enter-right {
+  animation: hud-enter-right 560ms var(--ease-lens) both;
+}
+.hud-sectors.hud-enter-right {
+  animation-delay: 60ms;
+}
+.hud-map.hud-enter-left {
+  animation-delay: 120ms;
+}
+.hud-cluster.hud-enter-right {
+  animation-delay: 180ms;
+}
+/* Panels lens-open from their own centre (same language as the pause menu),
+   with a small drift from the edge they live on. */
+@keyframes hud-enter-left {
+  from {
+    clip-path: inset(calc(50% - 14px) calc(50% - 14px) round 14px);
+    opacity: 0.3;
+    transform: translateX(-12px) scale(0.97);
+  }
+  to {
+    clip-path: inset(0 round 10px);
+  }
+}
+@keyframes hud-enter-right {
+  from {
+    clip-path: inset(calc(50% - 14px) calc(50% - 14px) round 14px);
+    opacity: 0.3;
+    transform: translateX(12px) scale(0.97);
+  }
+  to {
+    clip-path: inset(0 round 10px);
+  }
+}
+
+/* Subtle reminder of where the menu lives (replaces the old button row). */
+.hud-hint {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.55);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+.hud-hint kbd {
+  margin-right: 8px;
+  padding: 2px 8px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+/* Boost: cyan light bleeding in from the screen edges while deploying. */
+.hud-boost-glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 160px 20px rgba(79, 209, 255, 0.28);
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+.hud-boost-glow.on {
+  opacity: 1;
+  transition-duration: 160ms;
+}
+
+/* --- Timing tower (top left) -------------------------------------------- */
+.hud-tower {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  width: 340px;
+  overflow: hidden;
+  background: var(--glass-hud);
+  backdrop-filter: var(--glass-hud-blur);
+  -webkit-backdrop-filter: var(--glass-hud-blur);
+  border: 1px solid var(--glass-edge);
+  border-radius: 10px;
+  box-shadow: var(--glass-highlight), 0 16px 40px rgba(0, 0, 0, 0.3);
+  font-variant-numeric: tabular-nums;
+}
+.hud-tower-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 44px;
+  padding: 0 16px 0 0;
+  background: rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.hud-session-tag {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: var(--red);
+}
+.hud-lapcount {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.hud-lapcount small {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+.hud-lapcount b {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1;
+}
+.hud-tower-current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 12px;
+}
+.hud-current-time {
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.hud-delta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.hud-delta-pill i {
+  font-style: normal;
+  font-size: 12px;
+}
+.hud-delta-pill.big {
+  padding: 8px 12px;
+  font-size: 16px;
+}
+.hud-delta-pill.faster {
+  color: var(--positive);
+  background: rgba(46, 230, 107, 0.14);
+}
+.hud-delta-pill.slower {
+  color: var(--negative);
+  background: rgba(255, 77, 77, 0.14);
+}
+.hud-delta-pill.none {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.06);
+}
+.hud-tower-grid {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: baseline;
+  row-gap: 8px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.hud-k {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+.hud-v {
+  font-size: 20px;
+  font-weight: 600;
+}
+.hud-v-delta {
+  font-size: 14px;
+  font-weight: 500;
+}
+.hud-v-delta.slower {
+  color: var(--negative);
+}
+.hud-history {
+  padding: 8px 0 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.12);
+}
+.hud-history-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  padding: 4px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.hud-history-row span:first-child {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+.hud-history-row span:last-child {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--negative);
+}
+.hud-history-row.best span:nth-child(2),
+.hud-history-row.best span:last-child {
+  color: var(--purple);
+}
+/* Laps deleted for track limits: struck through, never purple. */
+.hud-history-row.deleted span:nth-child(2),
+.hud-current-time.deleted,
+.menu-lap.deleted b {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+.hud-history-row.deleted span:last-child,
+.menu-lap.deleted em {
+  color: var(--negative);
+}
+.hud-delta-pill.deleted {
+  color: var(--negative);
+  background: rgba(229, 72, 77, 0.16);
+}
+.hud-strikes {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--yellow);
+}
+.hud-strikes.out {
+  color: var(--negative);
+}
+
+/* --- Sector panel (top right) ------------------------------------------- */
+.hud-sectors {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 440px;
+  padding: 12px;
+  background: var(--glass-hud);
+  backdrop-filter: var(--glass-hud-blur);
+  -webkit-backdrop-filter: var(--glass-hud-blur);
+  border: 1px solid var(--glass-edge);
+  border-radius: 10px;
+  box-shadow: var(--glass-highlight), 0 16px 40px rgba(0, 0, 0, 0.3);
+  font-variant-numeric: tabular-nums;
+}
+.hud-sector-blocks {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.hud-sector-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.12);
+  /* A completed sector's colour arrives with a quick fade: state indication. */
+  transition:
+    background-color 300ms ease,
+    box-shadow 300ms ease;
+}
+.hud-sector-block span {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+.hud-sector-block b {
+  font-size: 17px;
+  font-weight: 500;
+}
+.hud-sector-block.live {
+  box-shadow: inset 0 -3px 0 var(--text);
+}
+.hud-sector-block.live b {
+  color: var(--text-2);
+}
+.hud-sector-block.purple {
+  background: rgba(177, 76, 255, 0.22);
+  box-shadow: inset 0 -3px 0 var(--purple);
+}
+.hud-sector-block.yellow {
+  background: rgba(255, 210, 63, 0.16);
+  box-shadow: inset 0 -3px 0 var(--yellow);
+}
+.hud-sector-block.purple span,
+.hud-sector-block.yellow span {
+  color: #fff;
+}
+.hud-sectors-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+.hud-sectors-foot small {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+.hud-sectors-foot b {
+  margin-left: 8px;
+  font-size: 18px;
+  font-weight: 500;
+}
+.hud-last-sector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- Dial cluster (bottom right) --------------------------------------- */
+.hud-cluster {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  display: grid;
+  grid-template-columns: 14px 128px auto 128px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 12px;
+  padding: 12px 16px 8px;
+  background: var(--glass-hud);
+  backdrop-filter: var(--glass-hud-blur);
+  -webkit-backdrop-filter: var(--glass-hud-blur);
+  border: 1px solid var(--glass-edge);
+  border-radius: 20px;
+  box-shadow: var(--glass-highlight), 0 18px 44px rgba(0, 0, 0, 0.35);
+}
+.hud-pedals {
+  height: 96px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  align-items: end;
+}
+.hud-pedals i {
+  height: 100%;
+  border-radius: 3px;
+  transform-origin: bottom;
+  transform: scaleY(var(--v, 0));
+  transition: transform 60ms linear;
+}
+.hud-pedals i.throttle {
+  background: linear-gradient(0deg, #1f9b4a, var(--positive));
+}
+.hud-pedals i.brake {
+  background: linear-gradient(0deg, #a1100b, #ff4136);
+}
+.hud-dial {
+  position: relative;
+  width: 128px;
+  height: 128px;
+}
+.hud-dial svg {
+  position: absolute;
+  inset: 0;
+}
+.hud-dial-track {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+.hud-dial-fill {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+.hud-dial.battery .hud-dial-fill {
+  stroke: #d8e83a;
+}
+.hud-dial.battery.active .hud-dial-fill {
+  stroke: #4fd1ff;
+}
+.hud-dial.battery.charging .hud-dial-fill {
+  stroke: var(--muted);
+}
+.hud-dial.speed .hud-dial-fill {
+  stroke: var(--text);
+}
+.hud-dial-body {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
+}
+.hud-dial-body small {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+.hud-dial-body b {
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.05;
+}
+.hud-dial-body small.rpm {
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+}
+.hud-gearblock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 150px;
+}
+.hud-leds {
+  display: grid;
+  grid-template-columns: repeat(15, 7px);
+  gap: 4px;
+}
+.hud-leds i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+.hud-leds i.on.g {
+  background: #2ee66b;
+  box-shadow: 0 0 8px rgba(46, 230, 107, 0.8);
+}
+.hud-leds i.on.r {
+  background: #ff3b30;
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.8);
+}
+.hud-leds i.on.b {
+  background: #3d8bff;
+  box-shadow: 0 0 9px rgba(61, 139, 255, 0.9);
+}
+.hud-leds.flash i.on {
+  animation: hud-flash 80ms steps(2) infinite;
+}
+@keyframes hud-flash {
+  50% {
+    opacity: 0.25;
+  }
+}
+.hud-gear {
+  font-size: 76px;
+  font-weight: 600;
+  line-height: 0.95;
+}
+.hud-boost {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+.hud-boost.ready {
+  color: var(--text-2);
+}
+.hud-boost.active {
+  color: #4fd1ff;
+}
+.hud-boost kbd {
+  padding: 1px 6px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+}
+.hud-assists {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+/* Assists: quiet mono codes; on = secondary text, off = faint. */
+.hud-assists span {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: rgba(237, 237, 237, 0.24);
+}
+.hud-assists span.on {
+  color: var(--text-2);
+}
+
+/* --- Minimap (bottom left) --------------------------------------------- */
+.hud-map {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  width: 200px;
+  height: 200px;
+  padding: 12px;
+  background: var(--glass-hud);
+  backdrop-filter: var(--glass-hud-blur);
+  -webkit-backdrop-filter: var(--glass-hud-blur);
+  box-shadow: var(--glass-highlight);
+  border: 1px solid var(--glass-edge);
+  border-radius: 12px;
+}
+.hud-map svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.hud-map-edge {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 6;
+  stroke-linejoin: round;
+}
+.hud-map-track {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+}
+.hud-map-car {
+  fill: var(--red);
+  stroke: #fff;
+  stroke-width: 1.2;
+}
+
+/* --- Flags & toasts ----------------------------------------------------- */
+.hud-flag {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  padding: 9px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: 8px;
+  transform: translateX(-50%) scale(0.92);
+  clip-path: inset(calc(50% - 8px) calc(50% - 8px) round 8px);
+  opacity: 0;
+  transition:
+    clip-path 320ms var(--ease-lens),
+    transform 320ms var(--ease-lens),
+    opacity 160ms ease;
+}
+.hud-flag[data-state="open"] {
+  transform: translateX(-50%) scale(1);
+  clip-path: inset(0 round 8px);
+  opacity: 1;
+}
+.hud-flag[data-state="closed"] {
+  transition-duration: 180ms;
+}
+.hud-flag.warn {
+  background: var(--yellow);
+  color: #111;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.hud-flag.bad {
+  background: var(--negative);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.hud-flag.info {
+  top: 116px;
+  background: var(--glass-hud);
+  backdrop-filter: var(--glass-hud-blur);
+  border: 1px solid var(--glass-edge);
+}
+/* Broadcast banners: wipe in from the left (clip-path), leave quicker. */
+.hud-banner {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  padding: 0 24px 0 0;
+  overflow: hidden;
+  background: var(--glass-hud);
+  backdrop-filter: var(--glass-hud-blur);
+  -webkit-backdrop-filter: var(--glass-hud-blur);
+  border: 1px solid var(--glass-edge);
+  border-radius: 10px;
+  box-shadow: var(--glass-highlight), 0 20px 50px rgba(0, 0, 0, 0.35);
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
+  animation: banner-in 420ms var(--ease-lens) both;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+.hud-banner[data-state="closed"] {
+  opacity: 0;
+  transform: translate(-50%, -6px);
+}
+@keyframes banner-in {
+  from {
+    clip-path: inset(calc(50% - 10px) calc(50% - 10px) round 10px);
+    opacity: 0.4;
+  }
+  to {
+    clip-path: inset(0 round 10px);
+  }
+}
+.hud-banner-tag {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: rgba(255, 255, 255, 0.1);
+}
+.hud-banner-time {
+  font-size: 30px;
+  font-weight: 500;
+}
+.hud-banner em {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--purple);
+}
+.hud-banner.best {
+  border-color: rgba(177, 76, 255, 0.6);
+  box-shadow: var(--glass-highlight), 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+.hud-banner.best .hud-banner-tag {
+  background: var(--purple);
+}
+.hud-banner.deleted .hud-banner-time {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+.hud-banner.deleted em {
+  color: var(--negative);
+}
+
+/* Start lights panel: lens-opens on the grid, collapses at lights out. */
+.lights-layer .lights-card {
+  clip-path: inset(calc(50% - 20px) calc(50% - 20px) round 20px);
+  transform: scale(0.94);
+  opacity: 0.4;
+  transition:
+    clip-path 480ms var(--ease-lens),
+    transform 480ms var(--ease-lens),
+    opacity 200ms ease;
+}
+.lights-layer[data-state="open"] .lights-card {
+  clip-path: inset(0 round 12px);
+  transform: scale(1);
+  opacity: 1;
+}
+.lights-layer[data-state="closed"] .lights-card {
+  transition-duration: 220ms;
+  transition-timing-function: var(--ease-in-out);
+}
+
+/* Curtain: the screen snaps to frosted glass and clears, hiding teleports. */
+.curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  background: rgba(8, 11, 16, 0.35);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  animation: curtain-clear 640ms var(--ease-out) both;
+}
+@keyframes curtain-clear {
+  0%,
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* --- Start lights -------------------------------------------------------- */
+.f1-countdown-overlay {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.f1-start-lights {
+  display: flex;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(8, 10, 14, 0.88);
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+.f1-start-pod {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: #15181d;
+  border-radius: 8px;
+}
+.f1-start-pod span {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #2a0b0b;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+  transition: background 60ms, box-shadow 60ms;
+}
+.f1-start-pod span.on {
+  background: radial-gradient(circle at 40% 35%, #ff8a7a, #ff1a0a 45%, #a00800);
+  box-shadow: 0 0 22px 6px rgba(255, 30, 10, 0.75);
+}
+
+/* --- Menus: frosted glass cards over the live scene ------------------------ */
+/* Scene behind the pause card eases in slightly (transform only). */
+.scene-layer {
+  position: absolute;
+  inset: 0;
+  transition: transform 560ms var(--ease-lens);
+}
+.scene-layer[data-zoom="true"] {
+  transform: scale(1.035);
+}
+
+/* Lens layer: the glass card grows out of a small lens at its own centre. */
+.lens-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+.lens-layer.align-left {
+  justify-content: flex-start;
+  padding-left: 6vw;
+}
+.lens-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 7, 10, 0.32);
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  opacity: 0;
+  transition: opacity 420ms var(--ease-out);
+}
+.lens-layer[data-state="open"] .lens-scrim {
+  opacity: 1;
+}
+.lens-layer[data-state="closed"] .lens-scrim {
+  transition-duration: 220ms;
+}
+.lens-card {
+  position: relative;
+  zoom: var(--menu-scale, 1);
+  clip-path: inset(calc(50% - 30px) calc(50% - 30px) round 30px);
+  transform: scale(0.94);
+  opacity: 0.4;
+  transition:
+    clip-path 520ms var(--ease-lens),
+    transform 520ms var(--ease-lens),
+    opacity 200ms ease;
+}
+.lens-layer[data-state="open"] .lens-card {
+  clip-path: inset(0 round 20px);
+  transform: scale(1);
+  opacity: 1;
+}
+.lens-layer[data-state="closed"] .lens-card {
+  transition-duration: 260ms, 260ms, 220ms;
+  transition-timing-function: var(--ease-in-out), var(--ease-in-out), ease;
+}
+/* Content fades up just after the lens opens, staggered; leaves all at once. */
+.lens-card > * {
+  opacity: 0;
+  transform: translateY(8px);
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+.lens-layer[data-state="open"] .lens-card > * {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 320ms ease,
+    transform 420ms var(--ease-out);
+}
+.lens-layer[data-state="open"] .lens-card > :nth-child(1) { transition-delay: 140ms; }
+.lens-layer[data-state="open"] .lens-card > :nth-child(2) { transition-delay: 170ms; }
+.lens-layer[data-state="open"] .lens-card > :nth-child(3) { transition-delay: 200ms; }
+.lens-layer[data-state="open"] .lens-card > :nth-child(4) { transition-delay: 230ms; }
+.lens-layer[data-state="open"] .lens-card > :nth-child(5) { transition-delay: 260ms; }
+.lens-layer[data-state="open"] .lens-card > :nth-child(6) { transition-delay: 290ms; }
+.lens-layer[data-state="open"] .lens-card > :nth-child(n + 7) { transition-delay: 320ms; }
+
+/* The title is open on first paint: its lens is already open and it staggers in. */
+.menu-title {
+  background: linear-gradient(90deg, rgba(5, 7, 10, 0.55) 0%, rgba(5, 7, 10, 0.15) 45%, rgba(5, 7, 10, 0) 70%);
+  transition: opacity 300ms ease;
+}
+.menu-title[data-state="closed"] {
+  opacity: 0;
+}
+@keyframes menu-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+.menu-panel {
+  width: 520px;
+  max-width: calc(100vw / var(--menu-scale, 1) - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 32px;
+  background: var(--glass-card);
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
+  border: 1px solid var(--glass-edge);
+  border-radius: 20px;
+  box-shadow:
+    var(--glass-highlight),
+    0 1px 0 rgba(255, 255, 255, 0.04),
+    0 30px 80px rgba(0, 0, 0, 0.45);
+}
+.menu-panel.wide {
+  width: 620px;
+}
+
+.lens-card h1 {
+  margin: 0;
+  font-size: clamp(44px, 5.4vw, 76px);
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+}
+.lens-card h2 {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.menu-sub {
+  margin: -8px 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.menu-eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.menu-primary,
+.menu-secondary {
+  height: 52px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition:
+    transform 160ms var(--ease-out),
+    box-shadow 200ms ease,
+    background-color 200ms ease;
+}
+.menu-primary {
+  border: 0;
+  color: #fff;
+  background-color: var(--red);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.menu-secondary {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--glass-edge);
+}
+/* Press feedback on pointer-down for every pressable control. */
+.menu-primary:active,
+.menu-secondary:active,
+.menu-seg button:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .menu-primary:hover {
+    background-color: #f01208;
+  }
+  .menu-secondary:hover {
+    background: rgba(255, 255, 255, 0.11);
+  }
+}
+.menu-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+/* Settings sit on a darker inset, never glass-on-glass (legibility collapses). */
+.menu-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(4, 6, 10, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+.menu-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.menu-seg {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--n, 3), 1fr);
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 4px;
+}
+/* The active pill slides between options instead of jumping. */
+.menu-seg-thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 6px) / var(--n, 3));
+  border-radius: 6px;
+  background: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transform: translateX(calc(var(--i, 0) * 100%));
+  transition: transform 300ms var(--ease-lens);
+}
+.menu-seg button {
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 180ms ease,
+    color 180ms ease;
+}
+.menu-seg button {
+  position: relative;
+  z-index: 1;
+}
+.menu-seg button.on {
+  color: #0b0e13;
+}
+/* Assists: a labelled group of rows, label left and switch right like the rows above. */
+.menu-assists {
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.menu-assists-label {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.menu-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 32px;
+  margin: 0 -8px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+.menu-toggle:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.menu-toggle.on {
+  color: var(--text-2);
+}
+/* Visually hidden but still focusable, so the switches work from the keyboard. */
+.menu-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.menu-toggle i {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background-color 200ms ease;
+}
+.menu-toggle i::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 260ms var(--ease-lens),
+    background-color 200ms ease;
+}
+/* On matches the segmented thumb: off-white with dark ink, no colour. */
+.menu-toggle.on i {
+  background: var(--text);
+}
+.menu-toggle.on i::after {
+  background: #0b0e13;
+  transform: translateX(16px);
+}
+.menu-toggle:active i::after {
+  transform: scale(0.9);
+}
+.menu-toggle.on:active i::after {
+  transform: translateX(16px) scale(0.9);
+}
+.menu-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.menu-controls kbd {
+  display: inline-block;
+  min-width: 20px;
+  margin-right: 4px;
+  padding: 1px 5px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+}
+.menu-pad {
+  color: var(--muted);
+}
+.menu-results {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.menu-results div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  background: rgba(4, 6, 10, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+.menu-results span {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-2);
+}
+.menu-results b {
+  font-size: 20px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pause: session summary, footer. Results: lap list. */
+.menu-summary,
+.menu-results {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.menu-summary div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 12px;
+  background: rgba(4, 6, 10, 0.32);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.menu-summary span {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-2);
+}
+.menu-summary b {
+  font-size: 20px;
+  font-weight: 500;
+}
+.menu-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.menu-footer kbd,
+.menu-link kbd {
+  margin: 0 4px;
+  padding: 1px 8px;
+  font-family: var(--font);
+  font-size: 12px;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 6px;
+}
+.menu-link {
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  transition: transform 160ms var(--ease-out), color 160ms ease;
+}
+.menu-link:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .menu-link:hover {
+    color: #fff;
+  }
+}
+.menu-laps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.menu-lap {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: baseline;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(4, 6, 10, 0.26);
+  animation: menu-rise 360ms var(--ease-out) both;
+  animation-delay: calc(360ms + var(--i, 0) * 50ms);
+}
+.menu-lap span {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-2);
+}
+.menu-lap b {
+  font-size: 18px;
+  font-weight: 500;
+}
+.menu-lap em {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ff8a80;
+}
+.menu-lap.best {
+  background: rgba(177, 76, 255, 0.18);
+  box-shadow: inset 3px 0 0 var(--purple);
+}
+.menu-lap.best b,
+.menu-lap.best em {
+  color: var(--purple);
+}
+.menu-sectors {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--text-2);
+}
+.menu-sectors b {
+  margin-left: 8px;
+  font-size: 15px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Loader: controls + tips, then frosted glass over the live circuit ------ */
+.loader {
+  z-index: 10;
+}
+.loader-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #141415, #0f0f10);
+  transition: opacity 900ms var(--ease-out);
+}
+/* Once the circuit is ready, the solid backdrop dissolves into glass over the scene. */
+.loader[data-ready="true"] .loader-bg {
+  opacity: 0;
+}
+.loader .loader-scrim {
+  opacity: 1;
+}
+.loader[data-state="closed"] .loader-scrim {
+  opacity: 0;
+}
+.loader-card {
+  width: 760px;
+  max-width: calc(100vw / var(--menu-scale, 1) - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 32px;
+  background: var(--glass-card);
+  backdrop-filter: var(--glass-card-blur);
+  -webkit-backdrop-filter: var(--glass-card-blur);
+  border: 1px solid var(--glass-edge);
+  border-radius: 20px;
+  box-shadow: var(--glass-highlight), 0 30px 80px rgba(0, 0, 0, 0.45);
+}
+/* First paint: a plain fade and settle. The circuit is built on the main thread
+   right after this paints, which would freeze a clip-path animation half-way;
+   opacity and transform run on the compositor and keep moving. The lens effect
+   is kept for dismissing the loader, when the page is idle. */
+.loader[data-state="open"] .loader-card {
+  clip-path: none;
+  animation: loader-in 520ms var(--ease-lens) both;
+}
+@keyframes loader-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+.loader[data-state="open"] .loader-card > * {
+  opacity: 1;
+  transform: none;
+  animation: menu-rise 480ms var(--ease-out) both;
+}
+.loader[data-state="open"] .loader-card > :nth-child(2) { animation-delay: 220ms; }
+.loader[data-state="open"] .loader-card > :nth-child(3) { animation-delay: 300ms; }
+.loader[data-state="open"] .loader-card > :nth-child(4) { animation-delay: 360ms; }
+.ld-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.ld-title {
+  margin: 0;
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+}
+.ld-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.ld-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(4, 6, 10, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+.ld-col-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.ld-row {
+  display: grid;
+  grid-template-columns: 82px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+.ld-keys {
+  display: flex;
+  gap: 5px;
+}
+.ld-key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07));
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom-width: 3px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+.ld-key.wide {
+  min-width: 58px;
+}
+.ld-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.ld-tip {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-height: 44px;
+  padding: 12px 16px;
+  background: rgba(4, 6, 10, 0.28);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.ld-tip-tag {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.ld-tip p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  animation: tip-in 420ms var(--ease-out) both;
+}
+@keyframes tip-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(3px);
+  }
+}
+.ld-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  justify-content: center;
+}
+.ld-continue {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #fff;
+  animation: menu-rise 420ms var(--ease-out) both;
+}
+
+.loader-bar {
+  width: min(420px, 70vw);
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+.loader-bar i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--red), #ff6a3d);
+  transform-origin: left;
+  transform: scaleX(0);
+}
+.loader-text {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+
+/* --- Accessibility ------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .loader-card,
+  .ld-tip p,
+  .ld-continue,
+  .loader[data-state="open"] .loader-card > *,
+  .menu-lap,
+  .hud-enter-left,
+  .hud-enter-right,
+  .hud-banner {
+    animation: menu-fade 200ms ease both;
+  }
+  .lens-card,
+  .lens-layer[data-state="open"] .lens-card,
+  .lens-card > *,
+  .hud-flag,
+  .hud-flag[data-state="open"],
+  .lights-layer .lights-card,
+  .lights-layer[data-state="open"] .lights-card {
+    clip-path: none;
+    transform: none;
+  }
+  .scene-layer[data-zoom="true"] {
+    transform: none;
+  }
+  .menu-seg-thumb {
+    transition: none;
+  }
+  .curtain {
+    animation-duration: 300ms;
+  }
+  .menu-primary:active,
+  .menu-secondary:active,
+  .menu-seg button:active,
+  .menu-link:active {
+    transform: none;
+  }
+  .hud-leds.flash i.on {
+    animation: none;
+  }
+}
+@keyframes menu-fade {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .menu-panel,
+  .lens-scrim,
+  .hud-tower,
+  .hud-sectors,
+  .hud-banner,
+  .hud-cluster,
+  .hud-map {
+    background: #10151c;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* --- Small screens ------------------------------------------------------- */
+@media (max-width: 760px) {
+  .hud-sectors {
+    width: 300px;
+  }
+  .hud-map {
+    width: 120px;
+    height: 120px;
+  }
+  .menu-title {
+    padding: 16px;
+    background: rgba(5, 7, 10, 0.7);
+  }
+  .menu-results {
+    grid-template-columns: 1fr 1fr;
+  }
+}
