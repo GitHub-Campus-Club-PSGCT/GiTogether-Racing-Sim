@@ -34,7 +34,7 @@ if (process.env.SHOT_UI) {
 const spots = JSON.parse(process.env.SHOT_SPOTS ?? "null") ?? [
   { name: "grid", u: 0.0, lateral: 0 },
   { name: "turn1", u: 0.17, lateral: 0 },
-  { name: "esses", u: 0.4, lateral: 2 },
+  { name: "compression", u: 0.13, lateral: 2 },
   { name: "hairpin", u: 0.7, lateral: 0 },
   { name: "backstraight", u: 0.55, lateral: -2 },
 ];
@@ -43,6 +43,7 @@ for (const spot of spots) {
     window.__f1.placeAt(s.u ?? 0, s.lateral ?? 0, s.speed ?? 0);
     if (s.cam) window.__f1.view(s.cam, s.target);
     if (s.steer != null) window.__f1.steer(s.steer);
+    for (const [k, v] of Object.entries(s.assists ?? {})) window.__f1.assist(k, v);
     if (s.screen) window.__f1.screen(s.screen, s.results);
   }, spot);
   if (spot.drive) {

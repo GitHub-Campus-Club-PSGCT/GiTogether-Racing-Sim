@@ -90,7 +90,8 @@ export const GRANDSTANDS = [
   { id: "main-a", u: uAtX(-22), lateral: -20, length: 58, scheme: 0 },
   { id: "main-b", u: uAtX(46), lateral: -20, length: 58, scheme: 1 },
   { id: "hairpin", u: uAt(300, 140), lateral: outside(uAt(300, 140)) * 23, length: 40, scheme: 2 },
-  { id: "esses", u: uAt(139, 404), lateral: 31, length: 44, scheme: 0 },
+  // Outside the left at the bottom of the compression, looking up the climb.
+  { id: "compression", u: uAt(202, 441), lateral: outside(uAt(202, 441)) * 26, length: 44, scheme: 0 },
   { id: "chicane", u: uAt(310, 1215), lateral: 24, length: 40, scheme: 1 },
   { id: "double-left", u: uAt(-200, 1420), lateral: outside(uAt(-200, 1420)) * 23, length: 46, scheme: 2 },
   { id: "bus-stop", u: uAt(-330, 260), lateral: 22, length: 40, scheme: 0 },

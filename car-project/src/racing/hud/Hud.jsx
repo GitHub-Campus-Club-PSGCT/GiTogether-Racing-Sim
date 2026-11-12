@@ -7,6 +7,7 @@ import { RULES } from "../rules";
 import { useGame } from "../store";
 import { formatTime, formatGap } from "./format";
 import { usePresence } from "./motion";
+import CornerCue from "./CornerCue";
 
 /** Small state flags (track limits, reverse) that pop in and out as glass lenses. */
 function Flag({ show, className, children }) {
@@ -319,6 +320,7 @@ export default function Hud() {
       {live && <Cluster t={t} />}
       {live && <Minimap t={t} />}
       {live && <Banners t={t} />}
+      {gameState === "racing" && <CornerCue t={t} />}
       {gameState === "racing" && <LimitsFlag t={t} />}
       <Flag show={t.reverse && gameState === "racing"} className="info">
         Reverse

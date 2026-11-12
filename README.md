@@ -55,18 +55,23 @@ The loading screen walks you through the controls and throws a few tips at you w
 
 The driver assists are all on by default: steering help, speed-sensitive steering (calmer steering at high speed, made for keyboards), traction control, ABS and stability control. Turn them off on the title or pause screen if you want more of a challenge.
 
+Two more assists help you learn the circuit:
+
+- **Racing line** (`Off` / `Corners` / `Full`, default `Corners`). A strip on the road along the ideal line, coloured from *your* speed: green to accelerate, yellow to lift or get ready, red to brake. Arrive faster and the red starts earlier. `Corners` shows it only around braking zones; `Full` shows it all the way round.
+- **Corner speed cue.** A small panel at the bottom of the screen with the next corner's target speed and what to do: *Brake in 120 m*, *Brake*, *Lift*, *Flat*, or *Too fast*. After each apex it shows your apex speed against the target.
+
 ## The circuit
 
 An original layout with a lot of Spa in its DNA:
 
 1. Flat start straight running into a tight hairpin
-2. A downhill run into a compression, then a **left-right-left esses climbing about 20 m**
+2. A long downhill run into a compression, then a **left-right-left climbing about 20 m at up to 16% over a blind crest**. It's flat out on the racing line with very little to spare; down the middle of the road it needs a big lift
 3. A ~900 m uphill straight to a chicane at the top of the hill
 4. Fast descending corners, a double-left, and a long right at the far end
 5. A fast sweep into a flowing infield section
 6. A back straight to a bus-stop chicane, and onto the line
 
-It's 4.69 km long with about 38 m of elevation change, and the steepest gradient is around 10%. The test bot gets round in about 1:39, and it never uses boost, so beat that.
+It's 4.66 km long with about 40 m of elevation change, and the steepest gradient is about 16%. The test bot drives the racing-line plan (with boost) and gets round in about 1:12, so that's the time to chase.
 
 ---
 
@@ -86,13 +91,15 @@ car-project/
 │   │   ├── drivetrain.js     torque curve, 8-speed gearbox, free-revving
 │   │   ├── lapTracker.js     laps, checkpoints, sectors, live delta, track limits
 │   │   ├── input.js          keyboard + gamepad → smoothed analog controls
-│   │   └── autopilot.js      a simple bot driver (tests and screenshots)
+│   │   ├── speedPlan.js      speed plan on the racing line + the racing-line/corner-cue guide
+│   │   └── autopilot.js      a bot that drives the plan (tests and screenshots)
 │   ├── scene/                everything 3D
 │   │   ├── GameScene.jsx     the frame loop (see below)
 │   │   ├── RaceTrack.jsx     road, kerbs, runoff, barriers, fences
 │   │   ├── Terrain.jsx       hills that follow the circuit's elevation
 │   │   ├── HeroCar.jsx       car model, wheels, suspension, brake lights
 │   │   ├── Effects.jsx       skid marks, tyre smoke, sparks
+│   │   ├── RacingLineGuide.jsx  the racing-line assist strip
 │   │   ├── Lighting.jsx      HDRI sky + sun + fog
 │   │   ├── PostFX.jsx        ambient occlusion, bloom, tone mapping, AA
 │   │   ├── camera.js         chase / far / T-cam / title orbit
@@ -128,7 +135,7 @@ flowchart LR
 `circuitDefinition.js` defines the circuit as a closed spline through hand-placed control points (x, height, z). Everything else is derived from it:
 
 - **Projection.** `projectToTrack(x, z)` returns how far along the lap a point is, how far it sits from the centreline, which surface it's on, and the road height and gradient underneath. A local search around the last hit keeps it cheap every frame, and a spatial hash handles everything else.
-- **Analysis.** From curvature it works out where the kerbs go (corners only), a racing line (the darker rubbered-in strip), and the runoff on each side: gravel outside slow corners, painted asphalt outside fast ones, grass on the straights.
+- **Analysis.** From curvature it works out where the kerbs go (corners only), the runoff on each side (gravel outside slow corners, painted asphalt outside fast ones, grass on the straights) and the racing line. The line is a minimum-curvature path within the track, kept far enough from the edges that following it never costs a track-limits strike. It is solved at load in a few milliseconds. It's the darker rubbered-in strip on the road, the line the assist draws, and the line the speed plan and the test bot use.
 - **Geometry.** Road, kerbs, runoff, lines, barriers and fences are all ribbons built along the spline.
 
 Because physics and rendering read the same data, what you see is what you drive on. If it looks like gravel, it grips like gravel.
@@ -147,6 +154,16 @@ The car is a "bicycle model": one front axle and one rear axle, each with a tyre
 Walls are tested at nine points around the car's outline every step. When one goes through, the car is pushed back out and a proper rigid-body impulse at the contact point bounces it off, so you get a realistic glancing hit or spin rather than sliding along a sticky wall.
 
 The `sim/` folder has no React or three.js in it on purpose. It's deterministic and covered by tests, including an autopilot lap of the real circuit and 108 crashes into walls at different angles and speeds.
+
+### Speed plan and the racing-line assist (`sim/speedPlan.js`)
+
+The plan works out how fast the car can go at every metre of the racing line, using the same grip model as the physics (front-axle limited, with downforce, tyre load sensitivity, and the load change over crests and dips):
+
+1. **Corner speed:** the fastest the car can hold each point's curvature. The plan uses about 93% of the car's grip, so a person can follow it.
+2. **Braking envelope:** a backward pass from every corner, so it knows how fast you can be going at any point and still make everything after it. Braking downhill takes longer, so the brake points move.
+3. **Plan:** a forward pass that accelerates under the envelope. It also lists the corners, each with an apex, a target speed, and whether it's *flat*, a *lift* or a *brake*.
+
+Each HUD tick, the guide takes your current speed and predicts it along the line ahead at full throttle. The point where that prediction meets the envelope is **your** brake point. The guide then colours the line and sets the cue. The cue only escalates through a corner (approach → lift → brake), so it doesn't flicker when you ride the limit. The tests check all of this, including a lap where the test bot follows the plan with no wall hits and no track-limit strikes, and checks that the climb after the compression is flat on the line but not down the middle.
 
 ### Changing the rules (`rules.js`)
 
@@ -182,6 +199,7 @@ The layout takes cues from F1 25, Gran Turismo and Forza:
 - **Timing tower (top left):** session tag, lap count, a big current lap time with a live delta pill, then best, last, track-limit warnings and lap history.
 - **Sector panel (top right):** three blocks that turn purple or yellow as you complete each sector, with the current one counting live.
 - **Dial cluster (bottom right):** battery ring, gear with rev lights, and speed/RPM.
+- **Corner speed cue (bottom centre):** target speed and *Brake in … / Brake / Lift / Flat / Too fast*, then your apex speed.
 
 Everything scales with the window.
 
@@ -223,12 +241,13 @@ You only need these if you change the source assets.
 | `bake-impostors.mjs` | Downloads two CC0 tree models and renders them from 8 angles into albedo + normal atlases (needs `npm run dev` running) |
 | `prepare-car.mjs` | Builds `public/assets/car/hero.glb` from the source model: separates the wheels (including the parts that steer with them), applies our own livery, compresses it (40 MB → 4.9 MB) |
 | `shots.mjs` | Takes screenshots around the circuit with Playwright and reports fps and draw calls (needs `npm run dev` running) |
+| `track-profile.mjs` | Prints the circuit's height, corner radius, racing-line offset, gradient and speed plan along a stretch, e.g. `node scripts/track-profile.mjs 560 900 20`. Use it when editing the circuit |
 
 ### Debug hooks
 
-Open the game with `?debug=1` and `window.__f1` gives you `placeAt(u, lateral)`, `view(cameraPos, target)`, `race(autopilot)`, `screen(name)`, `steer(angle)`, `roll(metres)`, `pose()`, `materials()`, `tweak(prefix, props)`, `paint(prefix, colour)`, `stats()` and `measureFps(ms)`. Two more URL options: `?ui=0` hides the HUD, and `?q=low|medium|high` picks a graphics preset.
+Open the game with `?debug=1` and `window.__f1` gives you `placeAt(u, lateral, speed)`, `assist(key, value)` (e.g. `assist("racingLine", "full")`), `view(cameraPos, target)`, `race(autopilot)`, `screen(name)`, `steer(angle)`, `roll(metres)`, `pose()`, `materials()`, `tweak(prefix, props)`, `paint(prefix, colour)`, `stats()` and `measureFps(ms)`. Two more URL options: `?ui=0` hides the HUD, and `?q=low|medium|high` picks a graphics preset.
 
-`shots.mjs` is driven by environment variables: `SHOT_SPOTS` (a JSON list of places to shoot), `SHOT_UI=1` and `SHOT_Q`.
+`shots.mjs` is driven by environment variables: `SHOT_SPOTS` (a JSON list of places to shoot; a spot can set `assists`, e.g. `{"racingLine":"full"}`), `SHOT_UI=1` and `SHOT_Q`.
 
 ## Assets and licences
 
@@ -245,6 +264,7 @@ All real-world branding has been stripped from the car. The livery, number and t
 ## Known gaps
 
 - The engine sound hasn't been tuned by ear on real speakers yet.
+- The racing line and corner cue are tuned against the test bot, not yet against people. Check that the brake points and the "flat" call for the climb feel fair to someone driving with a keyboard. The margins are `PLAN_MARGIN` in `sim/speedPlan.js`.
 - Frame rate has only been measured on one Mac, so check it on the machines you'll actually use.
 - It's a solo time trial for now; there are no opponents.
 - No touch controls yet.

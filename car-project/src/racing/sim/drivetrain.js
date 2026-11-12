@@ -86,3 +86,14 @@ export function freeRev(d, throttle, dt) {
   d.rpm += (target - d.rpm) * Math.min(1, dt * rate);
   if (d.rpm > ENGINE.limiter - 350) d.rpm -= 600 * Math.random(); // limiter bounce
 }
+
+/** Best full-throttle drive force (N) at `speed` in any gear, ignoring shift cuts. */
+export function maxDriveForce(speed) {
+  let best = 0;
+  for (let g = 1; g <= GEAR_COUNT; g++) {
+    const rpm = Math.max(wheelRpm(speed, g), g === 1 ? ENGINE.idleRpm + 3600 : ENGINE.idleRpm);
+    if (rpm > ENGINE.upshiftRpm && g < GEAR_COUNT) continue;
+    best = Math.max(best, (torqueAt(rpm) * GEAR_RATIOS[g - 1] * ENGINE.efficiency) / WHEEL_RADIUS);
+  }
+  return best;
+}

@@ -63,7 +63,7 @@ function ProgressBar() {
 
 const TIPS = [
   "Brake in a straight line, then turn in. Trail off the brake as you reach the apex.",
-  "Save boost for the long uphill straight after the esses.",
+  "Save boost for the long uphill straight after the climb out of the compression.",
   "Hard braking recharges the boost battery. So does a slow trickle over time.",
   "The car goes light over crests. Ease off the steering when you feel it.",
   "Purple means your best ever. Yellow means slower than your best.",

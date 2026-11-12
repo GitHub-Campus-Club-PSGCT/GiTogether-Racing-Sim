@@ -8,6 +8,7 @@ import { createVehicle, resetVehicle, stepVehicle, speedOf } from "../sim/vehicl
 import { createLapTracker, stepLapTracker } from "../sim/lapTracker";
 import { createInput } from "../sim/input";
 import { autopilot } from "../sim/autopilot";
+import { createGuide, stepGuide } from "../sim/speedPlan";
 import { useGame } from "../store";
 import RaceTrack from "./RaceTrack";
 import Lighting from "./Lighting";
@@ -17,6 +18,7 @@ import Scenery from "./Scenery";
 import HeroCar from "./HeroCar";
 import { updateCamera } from "./camera";
 import Effects from "./Effects";
+import RacingLineGuide from "./RacingLineGuide";
 
 const SIM_DT = 1 / 120;
 const MAX_STEPS_PER_FRAME = 12;
@@ -42,6 +44,8 @@ function createSim() {
     clock: 0,
     frames: 0,
     cameraOverride: null,
+    guide: createGuide(), // racing-line assist and corner cue (sim/speedPlan.js)
+    cue: null,
   };
 }
 
@@ -64,6 +68,7 @@ export default function GameScene() {
   const sunRef = useRef();
   const heroRef = useRef();
   const fxRef = useRef();
+  const guideRef = useRef();
   const cameraRig = useRef({});
   const inputRef = useRef(null);
   const simRef = useRef(null);
@@ -140,6 +145,10 @@ export default function GameScene() {
       steer(angle) {
         simRef.current.vehicle.steerAngle = angle;
       },
+      // Set an assist, e.g. assist("racingLine", "full").
+      assist(key, value) {
+        useGame.getState().setAssist(key, value);
+      },
       race(auto = true) {
         simRef.current.autopilot = auto;
         useGame.getState().setGameState("racing");
@@ -193,6 +202,12 @@ export default function GameScene() {
     syncPrev(sim);
     invalidate();
   }, [resetSignal, invalidate]);
+
+  // While paused the canvas renders on demand: redraw when an assist changes, so a
+  // racing-line setting changed in the pause menu shows straight away.
+  useEffect(() => {
+    invalidate();
+  }, [assists, invalidate]);
 
   // Full restart: new car state and lap timing.
   useEffect(() => {
@@ -365,6 +380,22 @@ export default function GameScene() {
     if (sim.hudTimer >= HUD_INTERVAL) {
       sim.hudTimer = 0;
       const t = sim.laps;
+
+      // Racing-line assist and corner cue, from the speed plan. Also stepped while
+      // paused (the car is still), so the line stays behind the menu and follows a
+      // setting changed there.
+      const lineMode = assists.racingLine ?? "off";
+      const guiding = (live || gameState === "paused") && (lineMode !== "off" || assists.cornerCue);
+      sim.cue = guiding
+        ? stepGuide(sim.guide, {
+            index: v.trackIndex,
+            speed: v.reverse ? 0 : v.vx,
+            offTrack: !v.track?.onTrack && !v.track?.onKerb,
+            mode: lineMode,
+          })
+        : null;
+      guideRef.current?.update(sim.guide, guiding && lineMode !== "off");
+      const result = sim.guide.result;
       useGame.getState().setTelemetry({
         speed: Math.round(speed * 3.6),
         lap: t.lap,
@@ -401,6 +432,28 @@ export default function GameScene() {
         lapDeleted: t.lapDeleted,
         limitEvents: t.limitEvents,
         lastLapDeleted: t.lastLapDeleted,
+        cue:
+          sim.cue && assists.cornerCue && isRacing
+            ? {
+                corner: sim.cue.corner,
+                status: sim.cue.status,
+                kind: sim.cue.kind,
+                direction: sim.cue.direction,
+                target: Math.round(sim.cue.target * 3.6),
+                pastApex: sim.cue.pastApex,
+                toApex: sim.cue.toApex,
+                brakeIn: sim.cue.brakeIn,
+              }
+            : null,
+        cornerResult: result
+          ? {
+              seq: sim.guide.resultSeq,
+              corner: result.id,
+              target: Math.round(result.target * 3.6),
+              speed: Math.round(result.speed * 3.6),
+              wide: result.wide,
+            }
+          : null,
       });
     }
   });
@@ -412,6 +465,7 @@ export default function GameScene() {
       <RaceTrack />
       <Scenery />
       <Effects ref={fxRef} />
+      <RacingLineGuide ref={guideRef} />
       <group ref={carRef}>
         <HeroCar ref={heroRef} />
       </group>

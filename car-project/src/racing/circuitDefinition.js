@@ -8,66 +8,85 @@
 import * as THREE from "three";
 
 // 1. Control points (x, height, z) of the circuit: an original ~4.7 km layout
-// with Spa-like character — hairpin, a climbing left-right-left esses, a long
-// uphill straight, fast downhill sweepers, a flowing infield and a bus-stop
-// chicane. The start straight stays flat along +X at z = 100 for the pit complex.
+// with Spa-like character — hairpin, a downhill run into a compression and a
+// steep left-right-left climb over a blind crest, a long uphill straight, fast
+// downhill sweepers, a flowing infield and a bus-stop chicane. The start
+// straight stays flat along +X at z = 100 for the pit complex.
 export const CIRCUIT_POINTS = [
-  new THREE.Vector3(0, 0, 100), // 0: Start / finish line
-  new THREE.Vector3(117.0, 0, 100), // 1
-  new THREE.Vector3(221.0, 0, 100), // 2: End of the start straight
-  new THREE.Vector3(265, 0, 104), // 3
-  new THREE.Vector3(288, -0.5, 130), // 4: Hairpin (T1)
-  new THREE.Vector3(280, -1, 162), // 5
-  new THREE.Vector3(252, -2, 180), // 6
-  new THREE.Vector3(222, -5, 218), // 7
-  new THREE.Vector3(183.6, -12, 297.2), // 8
-  new THREE.Vector3(152.3, -17, 358.4), // 9: Downhill run
-  new THREE.Vector3(138.7, -19, 406.0), // 10: Esses: compression at the bottom
-  new THREE.Vector3(154, -17.5, 442), // 11: Esses: left
-  new THREE.Vector3(143, -14, 481), // 12: Esses: right
-  new THREE.Vector3(162, -9.5, 522), // 13: Esses: left, climbing
-  new THREE.Vector3(179.5, -5, 576.0), // 14: Crest, onto the long uphill straight
-  new THREE.Vector3(224.4, 3, 752.8), // 15
-  new THREE.Vector3(272.0, 12, 956.8), // 16
-  new THREE.Vector3(310.1, 18, 1133.6), // 17: Top of the hill
-  new THREE.Vector3(321.0, 19, 1188.0), // 18
-  new THREE.Vector3(304.6, 19, 1228.8), // 19: Chicane
-  new THREE.Vector3(326.4, 18, 1272.3), // 20
-  new THREE.Vector3(350.9, 15, 1337.6), // 21
-  new THREE.Vector3(333.2, 12, 1405.6), // 22: Long right, descending
-  new THREE.Vector3(278.8, 9, 1439.6), // 23
-  new THREE.Vector3(217.6, 7, 1426.0), // 24
-  new THREE.Vector3(108.8, 3, 1392.0), // 25
-  new THREE.Vector3(-27.2, -2, 1378.4), // 26: Fast downhill run west
-  new THREE.Vector3(-149.6, -6, 1398.8), // 27
-  new THREE.Vector3(-231.2, -8, 1453.2), // 28: Double left
-  new THREE.Vector3(-278.8, -9, 1528.0), // 29
-  new THREE.Vector3(-292.4, -10, 1602.8), // 30
-  new THREE.Vector3(-326.4, -11, 1657.2), // 31: Long right at the far end
-  new THREE.Vector3(-394.4, -12, 1670.8), // 32
-  new THREE.Vector3(-448.8, -11, 1630.0), // 33
-  new THREE.Vector3(-476.0, -9, 1555.2), // 34
-  new THREE.Vector3(-492, -6, 1440), // 35: Fast sweep north
-  new THREE.Vector3(-480, -4, 1300), // 36
-  new THREE.Vector3(-430, -3, 1180), // 37
-  new THREE.Vector3(-350, -2, 1110), // 38: Into the infield
-  new THREE.Vector3(-262, -1, 1072), // 39
-  new THREE.Vector3(-208, 0, 1028), // 40
-  new THREE.Vector3(-196, 0, 962), // 41: Infield left
-  new THREE.Vector3(-226, 0, 898), // 42
-  new THREE.Vector3(-300, 0, 852), // 43
-  new THREE.Vector3(-380, 0, 792), // 44: Right onto the back straight
-  new THREE.Vector3(-420, 0, 700), // 45
-  new THREE.Vector3(-412, 0, 560), // 46
-  new THREE.Vector3(-382, 0, 420), // 47
-  new THREE.Vector3(-346, 0, 300), // 48
-  new THREE.Vector3(-322, 0, 214), // 49: Bus-stop chicane
-  new THREE.Vector3(-300, 0, 168), // 50
-  new THREE.Vector3(-270, 0, 150), // 51
-  new THREE.Vector3(-252, 0, 126), // 52
-  new THREE.Vector3(-224, 0, 106), // 53
-  new THREE.Vector3(-150, 0, 100), // 54
-  new THREE.Vector3(-70, 0, 100), // 55: Run onto the start straight
+  new THREE.Vector3(0, 0, 100), // Start / finish line
+  new THREE.Vector3(117.0, 0, 100),
+  new THREE.Vector3(221.0, 0, 100), // End of the start straight
+  new THREE.Vector3(265, 0, 104),
+  new THREE.Vector3(288, -0.5, 130), // Hairpin (T1)
+  new THREE.Vector3(280, -1, 162),
+  new THREE.Vector3(252, -2, 180),
+  // Eau Rouge / Raidillon-style sequence, laid out as arcs with a designed grade
+  // profile (centreline radii): a fast left sweep off the hairpin, a long -8.5%
+  // run down the hill, a left through the compression at the bottom (R ~85 m),
+  // a right climbing at ~16% (R ~80 m), then a left over a blind crest (R ~105 m)
+  // where the car goes light. Flat out on the racing line (it straightens the
+  // sequence to R 200+ m); down the middle it needs a big lift. The speed plan
+  // tests in sim/speedPlan.test.js hold it to that. Generated as arcs, so tune it
+  // with scripts/track-profile.mjs rather than nudging single points.
+  new THREE.Vector3(236.1, -3.03, 199.2),
+  new THREE.Vector3(224.8, -4.64, 221.5),
+  new THREE.Vector3(218.5, -6.72, 245.6),
+  new THREE.Vector3(215.9, -8.84, 270.5),
+  new THREE.Vector3(213.3, -10.97, 295.4),
+  new THREE.Vector3(210.8, -13.09, 320.2),
+  new THREE.Vector3(208.3, -15.22, 345.1),
+  new THREE.Vector3(205.7, -17.34, 370),
+  new THREE.Vector3(203.2, -19.45, 394.8),
+  new THREE.Vector3(200.8, -21.07, 419.7),
+  new THREE.Vector3(202.4, -20.91, 444.6),
+  new THREE.Vector3(209.9, -17.96, 468.4),
+  new THREE.Vector3(218.6, -14.09, 491.8),
+  new THREE.Vector3(221.2, -10.21, 516.6),
+  new THREE.Vector3(217.2, -6.36, 541.1),
+  new THREE.Vector3(208.8, -3.35, 564.7),
+  new THREE.Vector3(204.2, -1.6, 589.2),
+  new THREE.Vector3(204.7, -0.7, 614.2), // Onto the long uphill straight
+  new THREE.Vector3(224.4, 3, 752.8),
+  new THREE.Vector3(272.0, 12, 956.8),
+  new THREE.Vector3(310.1, 18, 1133.6), // Top of the hill
+  new THREE.Vector3(321.0, 19, 1188.0),
+  new THREE.Vector3(304.6, 19, 1228.8), // Chicane
+  new THREE.Vector3(326.4, 18, 1272.3),
+  new THREE.Vector3(350.9, 15, 1337.6),
+  new THREE.Vector3(333.2, 12, 1405.6), // Long right, descending
+  new THREE.Vector3(278.8, 9, 1439.6),
+  new THREE.Vector3(217.6, 7, 1426.0),
+  new THREE.Vector3(108.8, 3, 1392.0),
+  new THREE.Vector3(-27.2, -2, 1378.4), // Fast downhill run west
+  new THREE.Vector3(-149.6, -6, 1398.8),
+  new THREE.Vector3(-231.2, -8, 1453.2), // Double left
+  new THREE.Vector3(-278.8, -9, 1528.0),
+  new THREE.Vector3(-292.4, -10, 1602.8),
+  new THREE.Vector3(-326.4, -11, 1657.2), // Long right at the far end
+  new THREE.Vector3(-394.4, -12, 1670.8),
+  new THREE.Vector3(-448.8, -11, 1630.0),
+  new THREE.Vector3(-476.0, -9, 1555.2),
+  new THREE.Vector3(-492, -6, 1440), // Fast sweep north
+  new THREE.Vector3(-480, -4, 1300),
+  new THREE.Vector3(-430, -3, 1180),
+  new THREE.Vector3(-350, -2, 1110), // Into the infield
+  new THREE.Vector3(-262, -1, 1072),
+  new THREE.Vector3(-208, 0, 1028),
+  new THREE.Vector3(-196, 0, 962), // Infield left
+  new THREE.Vector3(-226, 0, 898),
+  new THREE.Vector3(-300, 0, 852),
+  new THREE.Vector3(-380, 0, 792), // Right onto the back straight
+  new THREE.Vector3(-420, 0, 700),
+  new THREE.Vector3(-412, 0, 560),
+  new THREE.Vector3(-382, 0, 420),
+  new THREE.Vector3(-346, 0, 300),
+  new THREE.Vector3(-322, 0, 214), // Bus-stop chicane
+  new THREE.Vector3(-300, 0, 168),
+  new THREE.Vector3(-270, 0, 150),
+  new THREE.Vector3(-252, 0, 126),
+  new THREE.Vector3(-224, 0, 106),
+  new THREE.Vector3(-150, 0, 100),
+  new THREE.Vector3(-70, 0, 100), // Run onto the start straight
 ];
 
 // Closed 3D Catmull-Rom spline with centripetal parameterization for smooth curvature
@@ -340,25 +359,114 @@ export const VERTICAL_CURVATURE = boxSmooth(
 );
 const CURVATURE_WIDE = boxSmooth(rawCurvature, 22);
 
-// Racing line: inside at the apex, outside on entry and exit.
-export const RACING_LINE = (() => {
-  const t = (k) => Math.tanh(55 * k);
-  const reach = metersToSamples(32);
-  const line = new Float32Array(N_SAMPLES);
-  for (let i = 0; i < N_SAMPLES; i++) {
-    const here = t(CURVATURE_WIDE[i]);
-    const around = t(CURVATURE_WIDE[wrapIndex(i + reach)]) + t(CURVATURE_WIDE[wrapIndex(i - reach)]);
-    const v = 5.0 * here - 3.0 * around * (1 - Math.abs(here));
-    line[i] = Math.max(-5.4, Math.min(5.4, v));
-  }
-  return boxSmooth(line, 10);
-})();
-
 // Kerbs only where the track actually turns.
 export const KERB_MASK = dilate(
   Uint8Array.from(CURVATURE, (k) => (Math.abs(k) > 1 / 140 ? 1 : 0)),
   18,
 );
+
+// How far the racing line may stray from the centreline (car centre, metres): the
+// car's half width plus a margin, a little less where a kerb backs up the edge.
+// Tight enough that a car following it (and running a little wide, as the test
+// bot does) never gets a track-limits strike.
+export const LINE_LIMIT = { plain: HALF_WIDTH - 1.25, kerb: HALF_WIDTH - 1.15 };
+
+/**
+ * Minimum-curvature line: lateral offsets (m, +left) that minimise the summed
+ * squared curvature of the path within the track. Solved by projected
+ * Gauss-Seidel on the discrete second difference, coarse to fine (a 4th-order
+ * system converges far too slowly on long corners at a single resolution).
+ */
+function solveMinCurvatureLine() {
+  const cx = new Float64Array(N_SAMPLES), cz = new Float64Array(N_SAMPLES);
+  for (let i = 0; i < N_SAMPLES; i++) {
+    cx[i] = centerlineSamples[i].x;
+    cz[i] = centerlineSamples[i].z;
+  }
+  let prev = null; // offsets at the previous (coarser) level
+  for (const [spacing, iterations] of [[40, 500], [20, 300], [10, 160], [5, 100]]) {
+    const M = Math.round(CIRCUIT_LENGTH / spacing);
+    const px = new Float64Array(M), pz = new Float64Array(M);
+    const nx = new Float64Array(M), nz = new Float64Array(M);
+    const lim = new Float64Array(M);
+    const o = new Float64Array(M);
+    const qx = new Float64Array(M), qz = new Float64Array(M); // current line points
+    for (let j = 0; j < M; j++) {
+      const i = Math.round((j * N_SAMPLES) / M) % N_SAMPLES;
+      px[j] = cx[i];
+      pz[j] = cz[i];
+      nx[j] = normals[i].x;
+      nz[j] = normals[i].z;
+      lim[j] = KERB_MASK[i] ? LINE_LIMIT.kerb : LINE_LIMIT.plain;
+      if (prev) {
+        const f = (j / M) * prev.length;
+        const a = Math.floor(f), t = f - a;
+        o[j] = prev[a % prev.length] * (1 - t) + prev[(a + 1) % prev.length] * t;
+      }
+      qx[j] = px[j] + nx[j] * o[j];
+      qz[j] = pz[j] + nz[j] * o[j];
+    }
+    for (let it = 0; it < iterations; it++) {
+      for (let j = 0; j < M; j++) {
+        const a = j >= 2 ? j - 2 : j - 2 + M, b = j >= 1 ? j - 1 : M - 1;
+        const c = j + 1 < M ? j + 1 : 0, d = j + 2 < M ? j + 2 : j + 2 - M;
+        // Point that zeroes the gradient of sum |P[k+1] - 2P[k] + P[k-1]|^2 w.r.t. P[j].
+        const tx = (4 * (qx[b] + qx[c]) - qx[a] - qx[d]) / 6;
+        const tz = (4 * (qz[b] + qz[c]) - qz[a] - qz[d]) / 6;
+        let v = (tx - px[j]) * nx[j] + (tz - pz[j]) * nz[j];
+        v = v < -lim[j] ? -lim[j] : v > lim[j] ? lim[j] : v;
+        o[j] = v;
+        qx[j] = px[j] + nx[j] * v;
+        qz[j] = pz[j] + nz[j] * v;
+      }
+    }
+    prev = o;
+  }
+  // Back to full resolution, lightly smoothed, then re-clamped.
+  const line = new Float32Array(N_SAMPLES);
+  const M = prev.length;
+  for (let i = 0; i < N_SAMPLES; i++) {
+    const f = (i / N_SAMPLES) * M;
+    const a = Math.floor(f), t = f - a;
+    line[i] = prev[a % M] * (1 - t) + prev[(a + 1) % M] * t;
+  }
+  const smooth = boxSmooth(line, 3);
+  for (let i = 0; i < N_SAMPLES; i++) {
+    const lim = KERB_MASK[i] ? LINE_LIMIT.kerb : LINE_LIMIT.plain;
+    smooth[i] = Math.max(-lim, Math.min(lim, smooth[i]));
+  }
+  return smooth;
+}
+
+// Racing line: lateral offset of the ideal line from the centreline at each sample.
+export const RACING_LINE = solveMinCurvatureLine();
+
+// The racing line as a path: points (x, z per sample), signed curvature (1/m,
+// positive = left) and the distance along the line from each sample to the next.
+export const LINE_POINTS = new Float32Array(N_SAMPLES * 2);
+for (let i = 0; i < N_SAMPLES; i++) {
+  LINE_POINTS[i * 2] = centerlineSamples[i].x + normals[i].x * RACING_LINE[i];
+  LINE_POINTS[i * 2 + 1] = centerlineSamples[i].z + normals[i].z * RACING_LINE[i];
+}
+export const LINE_STEP = Float32Array.from({ length: N_SAMPLES }, (_, i) => {
+  const j = wrapIndex(i + 1);
+  return Math.hypot(LINE_POINTS[j * 2] - LINE_POINTS[i * 2], LINE_POINTS[j * 2 + 1] - LINE_POINTS[i * 2 + 1]);
+});
+export const LINE_CURVATURE = (() => {
+  const k = metersToSamples(4);
+  const raw = new Float32Array(N_SAMPLES);
+  for (let i = 0; i < N_SAMPLES; i++) {
+    const a = wrapIndex(i - k) * 2, b = i * 2, c = wrapIndex(i + k) * 2;
+    const ax = LINE_POINTS[a], az = LINE_POINTS[a + 1];
+    const bx = LINE_POINTS[b], bz = LINE_POINTS[b + 1];
+    const cx = LINE_POINTS[c], cz = LINE_POINTS[c + 1];
+    const cross = (bx - ax) * (cz - az) - (cx - ax) * (bz - az);
+    const ab = Math.hypot(bx - ax, bz - az), bc = Math.hypot(cx - bx, cz - bz), ca = Math.hypot(ax - cx, az - cz);
+    // Circumscribed-circle curvature; the sign matches CURVATURE (left = +).
+    raw[i] = (-2 * cross) / Math.max(ab * bc * ca, 1e-9);
+  }
+  return boxSmooth(raw, 4);
+})();
 
 // Runoff surface weights per side: [grass, asphalt, gravel]. Side 0 = left (+normal), 1 = right.
 export const RUNOFF_WEIGHTS = [0, 1].map((sideIdx) => {
@@ -420,10 +528,11 @@ const roadTile = CIRCUIT_LENGTH / Math.round(CIRCUIT_LENGTH / 7);
 
 /**
  * Build a ribbon that follows the centreline. `profile` is a list of
- * [lateral offset (m, +left), height (m)] pairs. Faces are flipped so their
- * normals agree with `facing(i)` (a THREE.Vector3-like {x,y,z}).
+ * [lateral offset (m, +left), height (m)] pairs, shifted sideways per sample by
+ * `shift(idx)`. Faces are flipped so their normals agree with `facing(i)` (a
+ * THREE.Vector3-like {x,y,z}).
  */
-function buildRibbon({ profile, facing, uv, attrs = {}, include = () => true }) {
+function buildRibbon({ profile, facing, uv, attrs = {}, include = () => true, shift = () => 0 }) {
   const cols = profile.length;
   const positions = [];
   const uvs = [];
@@ -435,7 +544,8 @@ function buildRibbon({ profile, facing, uv, attrs = {}, include = () => true }) 
     const n = normals[idx];
     const along = i * SAMPLE_SPACING;
     for (let c = 0; c < cols; c++) {
-      const [lat, h] = profile[c];
+      const [base, h] = profile[c];
+      const lat = base + shift(idx);
       positions.push(p.x + n.x * lat, p.y + h, p.z + n.z * lat);
       uvs.push(...uv({ lat, h, along, col: c, x: p.x + n.x * lat, z: p.z + n.z * lat }));
       for (const [k, a] of Object.entries(attrs)) {
@@ -574,6 +684,23 @@ export function createCircuitGeometries() {
   );
 
   return { roadGeom, kerbs, runoffs, lines, barriers, fences };
+}
+
+export const GUIDE_WIDTH = 0.95; // racing-line guide strip, metres
+
+/**
+ * Strip along the racing line for the racing-line assist: 2 vertices per sample
+ * (row r = sample r % SAMPLE_COUNT, one row more than samples to close the loop).
+ * uv = [0..1 across, metres along].
+ */
+export function createRacingLineGeometry() {
+  const w = GUIDE_WIDTH / 2;
+  return buildRibbon({
+    profile: [[-w, 0.035], [w, 0.035]],
+    shift: (idx) => RACING_LINE[idx],
+    facing: UP,
+    uv: ({ col, along }) => [col, along],
+  });
 }
 
 /** Points along the track at a fixed spacing where `mask(sideIdx, idx)` holds. */

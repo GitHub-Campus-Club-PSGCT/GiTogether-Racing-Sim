@@ -42,10 +42,25 @@ describe("circuit layout", () => {
     expect(minD).toBeGreaterThan(70);
   });
 
-  it("has real elevation with gradients no steeper than 12%", () => {
+  // The Raidillon-style climb out of the compression is the steepest part, at ~16%.
+  it("has real elevation with gradients no steeper than 17%", () => {
     const ys = pts.map((p) => p.y);
     expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(25);
-    expect(Math.max(...Array.from(GRADE, Math.abs))).toBeLessThan(0.12);
+    expect(Math.max(...Array.from(GRADE, Math.abs))).toBeLessThan(0.17);
+  });
+
+  it("has a compression, a steep climb and a crest after the hairpin", () => {
+    // From the bottom of the downhill run to the top of the climb.
+    const from = Math.round(560 / spacing), to = Math.round(860 / spacing);
+    const grades = [], heights = [];
+    for (let i = from; i < to; i++) {
+      const a = pts[i], b = pts[i + 1];
+      grades.push((b.y - a.y) / Math.hypot(b.x - a.x, b.z - a.z));
+      heights.push(a.y);
+    }
+    expect(Math.min(...grades)).toBeLessThan(-0.07); // steep run down
+    expect(Math.max(...grades)).toBeGreaterThan(0.14); // steep climb
+    expect(Math.max(...heights) - Math.min(...heights)).toBeGreaterThan(18);
   });
 
   it("keeps the start straight flat and straight for the pits and grid", () => {

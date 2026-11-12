@@ -29,8 +29,8 @@ export const CAR = {
 };
 CAR.cgToRear = CAR.wheelbase - CAR.cgToFront;
 
-const G = 9.81;
-const AIR = 0.5 * 1.225;
+export const G = 9.81;
+export const AIR = 0.5 * 1.225; // half the air density, kg/m³
 
 export const SURFACE = {
   asphalt: { grip: 1.0, drag: 0 },
@@ -49,8 +49,17 @@ export const BOOST = {
   trickle: 1 / 75, // battery fraction per second when not deploying
 };
 
-// speedSteer is applied to the controls (sim/input.js), the rest inside the sim.
-export const DEFAULT_ASSISTS = { steering: true, speedSteer: true, traction: true, abs: true, stability: true };
+// speedSteer is applied to the controls (sim/input.js); racingLine ("off" | "corners" |
+// "full") and cornerCue are display-only (sim/speedPlan.js); the rest act inside the sim.
+export const DEFAULT_ASSISTS = {
+  steering: true,
+  speedSteer: true,
+  traction: true,
+  abs: true,
+  stability: true,
+  racingLine: "corners",
+  cornerCue: true,
+};
 
 export const WALL = { restitution: 0.25, friction: 0.35, minImpact: 1.5 };
 
@@ -128,7 +137,7 @@ function surfaceFor(p) {
 }
 
 /** Highest lateral acceleration the car can hold at speed v, m/s². */
-function lateralLimit(v, gripScale) {
+export function lateralLimit(v, gripScale) {
   const down = AIR * CAR.liftArea * v * v;
   return TYRE.muPeak * gripScale * G * (1 + down / (CAR.mass * G)) * 0.94;
 }

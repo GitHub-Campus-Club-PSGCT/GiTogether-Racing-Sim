@@ -70,6 +70,7 @@ const ASSISTS = [
   ["traction", "Traction control"],
   ["abs", "ABS"],
   ["stability", "Stability control"],
+  ["cornerCue", "Corner speed cue"],
 ];
 
 function Segmented({ value, options, onChange }) {
@@ -91,6 +92,7 @@ function Settings({ inSession = false }) {
   const setQuality = useGame((s) => s.setQuality);
   const assists = useGame((s) => s.assists);
   const toggleAssist = useGame((s) => s.toggleAssist);
+  const setAssist = useGame((s) => s.setAssist);
   const cameraMode = useGame((s) => s.cameraMode);
   const muted = useGame((s) => s.muted);
   const setMuted = useGame((s) => s.setMuted);
@@ -114,6 +116,14 @@ function Settings({ inSession = false }) {
       <div className="menu-setting">
         <span>Sound</span>
         <Segmented value={muted ? "off" : "on"} onChange={(v) => setSound(v === "on")} options={[["on", "On"], ["off", "Off"]]} />
+      </div>
+      <div className="menu-setting">
+        <span>Racing line</span>
+        <Segmented
+          value={assists.racingLine}
+          onChange={(v) => setAssist("racingLine", v)}
+          options={[["off", "Off"], ["corners", "Corners"], ["full", "Full"]]}
+        />
       </div>
       <div className="menu-assists" role="group" aria-labelledby="menu-assists-label">
         <span id="menu-assists-label" className="menu-assists-label">

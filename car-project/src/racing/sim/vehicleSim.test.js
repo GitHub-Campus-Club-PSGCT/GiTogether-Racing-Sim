@@ -8,6 +8,7 @@ import {
   GRID_START,
   CHECKPOINTS,
   CIRCUIT_CURVE,
+  HALF_WIDTH,
 } from "../circuitDefinition.js";
 
 const DT = 1 / 120;
@@ -206,20 +207,30 @@ function driveLap(maxSeconds = 300) {
   for (let i = 0; i < maxSeconds / DT && lapTime == null; i++) {
     stepVehicle(s, autopilot(s), DT, circuit);
     if (s.impact > 0) wallHits++;
-    const r = stepLapTracker(laps, { u: s.track.u, speed: s.vx, dt: DT, checkpoints: CHECKPOINTS });
+    const r = stepLapTracker(laps, {
+      u: s.track.u,
+      speed: s.vx,
+      dt: DT,
+      checkpoints: CHECKPOINTS,
+      offset: s.track.absDistance,
+      halfWidth: HALF_WIDTH,
+    });
     if (r.lapCompleted) lapTime = laps.lastLapTime;
   }
-  return { s, lapTime, wallHits };
+  return { s, lapTime, wallHits, strikes: laps.limitEvents };
 }
 
 describe("full lap", () => {
+  // The autopilot drives the racing-line assist's plan, so this also proves the plan
+  // the player is shown can be driven: no walls, and no track-limit strikes.
   it("an autopilot completes a valid lap of the real circuit", () => {
-    const { lapTime, wallHits } = driveLap();
+    const { lapTime, wallHits, strikes } = driveLap();
     console.log(`autopilot lap: ${lapTime?.toFixed(2)} s, wall hits: ${wallHits}`);
     expect(lapTime).not.toBeNull();
     expect(lapTime).toBeGreaterThan(60);
     expect(lapTime).toBeLessThan(200);
     expect(wallHits).toBe(0);
+    expect(strikes).toBe(0);
   });
 
   it("is deterministic: same inputs give the same lap", () => {

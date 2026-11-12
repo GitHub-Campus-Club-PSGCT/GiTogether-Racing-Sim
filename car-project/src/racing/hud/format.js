@@ -14,3 +14,10 @@ export function formatGap(seconds) {
   if (seconds == null || Number.isNaN(seconds)) return "";
   return `${seconds < 0 ? "−" : "+"}${Math.abs(seconds).toFixed(3)}`;
 }
+
+/** Signed whole number with a true minus, e.g. +4 or −12 (speed differences). */
+export function formatSigned(n) {
+  if (n == null || Number.isNaN(n)) return "";
+  const r = Math.round(n);
+  return `${r < 0 ? "−" : "+"}${Math.abs(r)}`;
+}

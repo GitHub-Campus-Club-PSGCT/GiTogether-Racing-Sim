@@ -695,6 +695,79 @@
   backdrop-filter: var(--glass-hud-blur);
   border: 1px solid var(--glass-edge);
 }
+/* Corner speed cue (CornerCue.jsx): a glass lens at the bottom centre. */
+.hud-cue {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--glass-hud);
+  backdrop-filter: var(--glass-hud-blur);
+  -webkit-backdrop-filter: var(--glass-hud-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--glass-highlight), 0 8px 24px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  transform: translateX(-50%) scale(0.92);
+  clip-path: inset(calc(50% - 8px) calc(50% - 8px) round 12px);
+  opacity: 0;
+  transition:
+    clip-path 320ms var(--ease-lens),
+    transform 320ms var(--ease-lens),
+    opacity 160ms ease;
+}
+.hud-cue[data-state="open"] {
+  transform: translateX(-50%) scale(1);
+  clip-path: inset(0 round 12px);
+  opacity: 1;
+}
+.hud-cue[data-state="closed"] {
+  transition-duration: 180ms;
+}
+.hud-cue-word {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.hud-cue-word b,
+.hud-cue-speed {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--text);
+}
+.hud-cue-speed {
+  font-size: 20px;
+  line-height: 1;
+}
+.hud-cue-speed small {
+  margin-left: 4px;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.hud-cue[data-status="brake"] .hud-cue-word {
+  color: var(--negative);
+}
+.hud-cue[data-status="lift"] .hud-cue-word {
+  color: var(--yellow);
+}
+.hud-cue[data-status="flat"] .hud-cue-word {
+  color: var(--positive);
+}
+.hud-cue[data-status="over"] {
+  background: var(--negative);
+  border-color: transparent;
+}
+.hud-cue[data-status="over"] .hud-cue-word,
+.hud-cue[data-status="over"] .hud-cue-speed,
+.hud-cue[data-status="over"] .hud-cue-speed small {
+  color: #fff;
+}
 /* Broadcast banners: wipe in from the left (clip-path), leave quicker. */
 .hud-banner {
   position: absolute;
@@ -1552,6 +1625,8 @@
   .lens-card > *,
   .hud-flag,
   .hud-flag[data-state="open"],
+  .hud-cue,
+  .hud-cue[data-state="open"],
   .lights-layer .lights-card,
   .lights-layer[data-state="open"] .lights-card {
     clip-path: none;
@@ -1588,6 +1663,7 @@
   .hud-sectors,
   .hud-banner,
   .hud-cluster,
+  .hud-cue,
   .hud-map {
     background: #10151c;
     backdrop-filter: none;

@@ -40,6 +40,8 @@ export const INITIAL_TELEMETRY = {
   battery: 1,
   boosting: false,
   lapTimes: [],
+  cue: null, // next corner for the corner speed cue (sim/speedPlan.js stepGuide)
+  cornerResult: null, // { seq, target, speed, wide } for the last corner done
 };
 
 export const useGame = create((set) => ({
@@ -79,6 +81,7 @@ export const useGame = create((set) => ({
   lowerQuality: () =>
     set((s) => ({ quality: s.quality === "high" ? "medium" : "low" })),
   toggleAssist: (key) => set((s) => ({ assists: { ...s.assists, [key]: !s.assists[key] } })),
+  setAssist: (key, value) => set((s) => ({ assists: { ...s.assists, [key]: value } })),
 
   togglePause: () =>
     set((s) => {
