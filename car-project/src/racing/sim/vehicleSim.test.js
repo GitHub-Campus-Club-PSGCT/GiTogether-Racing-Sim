@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { createVehicle, stepVehicle, speedOf, DEFAULT_ASSISTS, PROBES, probeWorld } from "./vehicleSim.js";
+import { createVehicle, stepVehicle, speedOf, DEFAULT_ASSISTS, PROBES, probeWorld, SURFACE, CAR, G } from "./vehicleSim.js";
+import { frictionCoefficient } from "./tyre.js";
 import { createLapTracker, stepLapTracker } from "./lapTracker.js";
 import {
   projectToTrack,
@@ -358,5 +359,51 @@ describe("grid start", () => {
     expect(t.lapTimes).toEqual([]);
     expect(t.sector).toBe(0);
     expect(t.trace[199]).toBe(-1); // nothing recorded at the end of the lap from the grid
+  });
+});
+
+describe("off-track surfaces", () => {
+  // Endless patch of one surface, optionally uphill along the car's heading.
+  const patch = (surface, grade = 0) => ({
+    barrier: 1e9,
+    project: () => ({
+      index: 0, u: 0, distance: 0, absDistance: 0, surface, grade,
+      centerPoint: { x: 0, z: 0 }, normal: { x: 1, z: 0 }, tangent: { x: 0, z: -1 },
+      onTrack: false, onKerb: false, onRunoff: true,
+    }),
+  });
+  const full = { throttle: 1, brake: 0, steer: 0 };
+
+  it("a stopped car can always drive away: resistance at rest is below rear traction", () => {
+    const staticRear = (CAR.mass * G * CAR.cgToFront) / CAR.wheelbase;
+    for (const [name, surf] of Object.entries(SURFACE)) {
+      const traction = frictionCoefficient(staticRear, staticRear, surf.grip) * staticRear * CAR.rearGripBias;
+      const resistance = CAR.rolling * CAR.mass * G + surf.drag * CAR.mass;
+      expect(resistance, name).toBeLessThan(traction * 0.6);
+    }
+  });
+
+  for (const grade of [0, 0.08]) {
+    it(`drives out of gravel from rest (grade ${grade})`, () => {
+      const s = run(createVehicle({ x: 0, z: 0, yaw: 0 }), full, 4, patch("gravel", grade));
+      expect(s.vx).toBeGreaterThan(30 * KMH);
+    });
+  }
+
+  it("drives out of grass from rest", () => {
+    const s = run(createVehicle({ x: 0, z: 0, yaw: 0 }), full, 4, patch("grass"));
+    expect(s.vx).toBeGreaterThan(60 * KMH);
+  });
+
+  it("gravel still punishes a fast arrival", () => {
+    const s = createVehicle({ x: 0, z: 0, yaw: 0 });
+    s.vx = 200 * KMH;
+    s.drivetrain.gear = 6;
+    let dist = 0;
+    while (s.vx > 60 * KMH && dist < 1000) {
+      stepVehicle(s, { throttle: 0, brake: 0, steer: 0 }, DT, patch("gravel"));
+      dist += s.vx * DT;
+    }
+    expect(dist).toBeLessThan(130);
   });
 });

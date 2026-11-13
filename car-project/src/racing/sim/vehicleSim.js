@@ -32,12 +32,16 @@ CAR.cgToRear = CAR.wheelbase - CAR.cgToFront;
 export const G = 9.81;
 export const AIR = 0.5 * 1.225; // half the air density, kg/m³
 
+// Surface resistance, m/s²: `drag` + `dragPerSpeed` × speed. Grass and gravel slow the
+// car mostly in proportion to speed (ploughing), so they punish a fast arrival but let
+// a stopped car drive out. The constant part must stay below what the rear tyres can
+// transmit on that surface, or a car at rest can never accelerate (tested).
 export const SURFACE = {
-  asphalt: { grip: 1.0, drag: 0 },
-  kerb: { grip: 0.92, drag: 1.2 },
-  runoff: { grip: 0.9, drag: 0.6 }, // painted asphalt runoff
-  grass: { grip: 0.65, drag: 4 },
-  gravel: { grip: 0.5, drag: 9.5 },
+  asphalt: { grip: 1.0, drag: 0, dragPerSpeed: 0 },
+  kerb: { grip: 0.92, drag: 1.2, dragPerSpeed: 0 },
+  runoff: { grip: 0.9, drag: 0.6, dragPerSpeed: 0 }, // painted asphalt runoff
+  grass: { grip: 0.65, drag: 0.8, dragPerSpeed: 0.08 },
+  gravel: { grip: 0.5, drag: 1.5, dragPerSpeed: 0.2 },
 };
 
 // Overtake boost: an electric deployment on top of the engine.
@@ -275,7 +279,8 @@ export function stepVehicle(s, input, dt, track, assists = DEFAULT_ASSISTS, opti
 
   // ---- Resistances -------------------------------------------------------
   const drag = AIR * CAR.dragArea * vx * Math.abs(vx);
-  const roll = (CAR.rolling * CAR.mass * G + surface.drag * CAR.mass) * Math.sign(vx) *
+  const surfaceDecel = surface.drag + surface.dragPerSpeed * Math.abs(vx);
+  const roll = (CAR.rolling * CAR.mass * G + surfaceDecel * CAR.mass) * Math.sign(vx) *
     Math.min(1, Math.abs(vx) / 0.5);
 
   // ---- Dynamic model -----------------------------------------------------
