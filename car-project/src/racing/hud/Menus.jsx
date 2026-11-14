@@ -268,6 +268,7 @@ export default function Menus() {
         <h1>
           GiTogether
           <br />
+          <br />
           Qualifying
         </h1>
         <p className="menu-sub">

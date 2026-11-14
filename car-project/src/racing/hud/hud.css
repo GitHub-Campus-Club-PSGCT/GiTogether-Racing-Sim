@@ -1041,7 +1041,7 @@
   margin: 0;
   font-size: clamp(44px, 5.4vw, 76px);
   font-weight: 600;
-  line-height: 0.92;
+  line-height: 1.05;
   letter-spacing: -0.025em;
 }
 .lens-card h2 {
